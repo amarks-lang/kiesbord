@@ -54,13 +54,15 @@
 <script>
 // ======================= VUL DIT BLOK ZELF IN =======================
 window.firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyDxmTRuVYgPUQPxfx9rOGig9yVx75v5Uwc",
+  authDomain: "digikeuzebord-7f371.firebaseapp.com",
+  projectId: "digikeuzebord-7f371",
+  storageBucket: "digikeuzebord-7f371.firebasestorage.app",
+  messagingSenderId: "76120852271",
+  appId: "1:76120852271:web:419bcfabd10b2b246fc3da"
 };
+// Alleen accounts van dit domein mogen inloggen (leeg = iedereen). Staat ook in firestore.rules!
+window.toegestaanDomein = "levwn.nl";
 // ====================================================================
 </script>
 <style>
@@ -257,7 +259,7 @@ const standaardOps = basis => [
 //  Datalaag: Firestore (FS) of probeermodus in localStorage (LS)
 //  Paden zijn strings: oneven aantal delen = collectie, even = document
 // ====================================================================
-const cfg = window.firebaseConfig || {};
+const cfg = window.firebaseConfig || {}, DOMEIN = (window.toegestaanDomein || '').toLowerCase();
 const LOKAAL = !cfg.apiKey || !cfg.projectId;
 const isCol = p => p.split('/').length % 2 === 1;
 let fb = null, DB = null;
@@ -368,6 +370,7 @@ async function start() {
 async function naAuth(u) {
   stopSubs(); S.user = u; S.ik = null;
   if (!u) return loginScherm();
+  if (DOMEIN && !(u.email || '').toLowerCase().endsWith('@' + DOMEIN)) { await fb.signOut(fb.auth); return loginScherm(`Alleen accounts die eindigen op @${DOMEIN} kunnen inloggen.`); }
   const metWachtwoord = u.providerData.some(p => p.providerId === 'password');
   if (metWachtwoord && !u.emailVerified) {
     const k = scherm(`<div class="groot">✉️</div><h2>Bevestig je e-mailadres</h2><p>Er is een mail gestuurd naar <b>${esc(u.email)}</b>. Klik op de link in die mail en kom daarna hier terug.</p><button class="pri" id="her">Ik heb bevestigd</button><button id="weer">Mail opnieuw sturen</button><button id="uit">Uitloggen</button>`);
@@ -386,14 +389,14 @@ async function naAuth(u) {
   naLogin();
 }
 
-function loginScherm() {
+function loginScherm(melding = '') {
   const k = scherm(`<div class="groot">🧸</div><h1 style="text-align:center">Keuzebord</h1>
     <button class="pri" id="g">Inloggen met Google</button><p class="zacht" style="text-align:center">of met e-mail</p>
     <input id="em" type="email" placeholder="E-mailadres" autocomplete="username"><input id="pw" type="password" placeholder="Wachtwoord" autocomplete="current-password">
-    <div class="rij"><button id="in" class="pri">Inloggen</button><button id="nw">Account maken</button><button id="ver" class="klein">Wachtwoord vergeten</button></div><p id="fout" class="zacht"></p>`);
+    <div class="rij"><button id="in" class="pri">Inloggen</button><button id="nw">Account maken</button><button id="ver" class="klein">Wachtwoord vergeten</button></div><p id="fout" class="zacht">${esc(melding)}</p>${DOMEIN ? `<p class="zacht" style="text-align:center">Log in met je @${esc(DOMEIN)}-account.</p>` : ''}`);
   const fout = e => $('#fout', k).textContent = ({ 'auth/invalid-credential': 'E-mailadres of wachtwoord klopt niet.', 'auth/email-already-in-use': 'Er bestaat al een account met dit e-mailadres.', 'auth/weak-password': 'Kies een wachtwoord van minstens 6 tekens.', 'auth/invalid-email': 'Dit e-mailadres klopt niet.', 'auth/unauthorized-domain': 'Dit domein staat nog niet bij de geautoriseerde domeinen in Firebase.' })[e.code] || e.message;
   const em = () => $('#em', k).value.trim(), pw = () => $('#pw', k).value;
-  $('#g', k).onclick = () => fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider()).catch(fout);
+  $('#g', k).onclick = () => { const pr = new fb.GoogleAuthProvider(); if (DOMEIN) pr.setCustomParameters({ hd: DOMEIN }); fb.signInWithPopup(fb.auth, pr).catch(fout); };
   $('#in', k).onclick = () => fb.signInWithEmailAndPassword(fb.auth, em(), pw()).catch(fout);
   $('#nw', k).onclick = () => fb.createUserWithEmailAndPassword(fb.auth, em(), pw()).then(c => fb.sendEmailVerification(c.user)).catch(fout);
   $('#ver', k).onclick = () => fb.sendPasswordResetEmail(fb.auth, em()).then(() => toast('Er is een mail gestuurd om je wachtwoord te wijzigen'), fout);
@@ -990,8 +993,8 @@ async function importeer(file) {
   try {
     const d = JSON.parse(await file.text());
     if (d.soort !== 'keuzebord-backup') throw new Error('Dit is geen back-up van het keuzebord');
-    if (!confirm(`Back-up van "${d.klas?.naam}" (${d.kinderen?.length || 0} kinderen, ${d.keuzes?.length || 0} keuzes) in deze klas zetten? Bestaande gegevens met dezelfde id worden overschreven.`)) return;
-    const ops = [{ p: KLAS(), d: d.klas || {} }, { p: K('bord/stand'), d: d.stand || { plaatsen: {}, rondeId: nieuwId() }, merge: false }];
+    if (!confirm(`"${d.klas?.naam || d.titel || 'Back-up'}" (${d.activiteiten?.length || 0} activiteiten, ${d.keuzeborden?.length || 0} keuzeborden, ${d.kinderen?.length || 0} kinderen, ${d.keuzes?.length || 0} keuzes) in deze klas zetten? Bestaande gegevens met dezelfde id worden overschreven.`)) return;
+    const ops = []; if (d.klas) ops.push({ p: KLAS(), d: d.klas }); if (d.stand) ops.push({ p: K('bord/stand'), d: d.stand, merge: false });
     for (const c of ['kinderen', 'activiteiten', 'moetjes', 'keuzes', 'keuzeborden']) for (const x of d[c] || []) ops.push({ p: K(c + '/' + x.id), d: zonderId(x), merge: false });
     await DB.batch(ops); toast('Back-up teruggezet');
   } catch (e) { toast('Importeren mislukt: ' + e.message); }

@@ -4,7 +4,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
 
-    function ingelogd() { return request.auth != null; }
+    // alleen bevestigde accounts van de eigen organisatie (pas het domein hier aan als dat verandert)
+    function ingelogd() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@levwn[.]nl$');
+    }
     function heeftDoc() { return exists(/databases/$(db)/documents/gebruikers/$(request.auth.uid)); }
     function ik() { return get(/databases/$(db)/documents/gebruikers/$(request.auth.uid)).data; }
     function isBeheerder(schoolId) {
@@ -26,8 +30,6 @@ service cloud.firestore {
 
       // Aanmaken kan op twee manieren:
       // 1. eerste keer opstarten: je wordt beheerder van een NIEUWE school (die nog niet bestaat)
-      //    Wil je dit beperken tot je eigen organisatie? Voeg dan toe:
-      //    && request.auth.token.email.matches('.*@jouwschool[.]nl')
       // 2. je bent door een beheerder uitgenodigd op je (bevestigde) e-mailadres
       allow create: if ingelogd() && request.auth.uid == uid && (
         (request.resource.data.rol == 'beheerder'

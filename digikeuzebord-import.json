@@ -1,0 +1,2181 @@
+{
+ "soort": "keuzebord-backup",
+ "versie": 1,
+ "titel": "Activiteiten en keuzeborden uit Digikeuzebord",
+ "activiteiten": [
+  {
+   "id": "dk1",
+   "naam": "Huishoek",
+   "plaatje": "🏠",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#f8b4b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk2",
+   "naam": "Kleine kring",
+   "plaatje": "👥",
+   "foto": "",
+   "plekken": 10,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk3",
+   "naam": "Knutselen",
+   "plaatje": "✂️",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#faf089",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk4",
+   "naam": "Schrijfhoek",
+   "plaatje": "📝",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#9ae6b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk5",
+   "naam": "Kleien",
+   "plaatje": "🏺",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk6",
+   "naam": "Constructiemateriaal",
+   "plaatje": "🔩",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk8",
+   "naam": "Bouwhoek",
+   "plaatje": "🧱",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#a3bffa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk10",
+   "naam": "Tekenen",
+   "plaatje": "✏️",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#d6bcfa",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk14",
+   "naam": "Leeshoek",
+   "plaatje": "📚",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk15",
+   "naam": "Zandtafel",
+   "plaatje": "🏖️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk21",
+   "naam": "Muziekhoek",
+   "plaatje": "🎵",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#f8b4b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk22",
+   "naam": "Computer",
+   "plaatje": "💻",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk24",
+   "naam": "Kieskast",
+   "plaatje": "🗄️",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#faf089",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk25",
+   "naam": "Krijtbord",
+   "plaatje": "🖍️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk27",
+   "naam": "Rekenhoek",
+   "plaatje": "🔢",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk544",
+   "naam": "Taalhoek",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk548",
+   "naam": "Spel",
+   "plaatje": "🎲",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#a3bffa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk550",
+   "naam": "Spelen aan tafel",
+   "plaatje": "🎲",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#d6bcfa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk551",
+   "naam": "Puzzelen",
+   "plaatje": "🧩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk554",
+   "naam": "Kralenplank",
+   "plaatje": "📿",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk556",
+   "naam": "Magneetbord",
+   "plaatje": "🧲",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk558",
+   "naam": "Letterhoekje",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk562",
+   "naam": "Lichtbak",
+   "plaatje": "💡",
+   "foto": "",
+   "plekken": 1,
+   "kleur": "#faf089",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk566",
+   "naam": "Lettertwister",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk569",
+   "naam": "Letterboek",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk573",
+   "naam": "Smart games",
+   "plaatje": "🧠",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk579",
+   "naam": "Ministeck",
+   "plaatje": "🔨",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk585",
+   "naam": "Rekenkast",
+   "plaatje": "🔢",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk590",
+   "naam": "Strijkkralen",
+   "plaatje": "📿",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk609",
+   "naam": "Bouwhoek",
+   "plaatje": "🧱",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk612",
+   "naam": "Dierenarts",
+   "plaatje": "🐶",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#f8b4b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk613",
+   "naam": "Huisarts",
+   "plaatje": "🩺",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#fbd38d",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk614",
+   "naam": "Weerhoek",
+   "plaatje": "🌦️",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#faf089",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk615",
+   "naam": "Kinetisch zand",
+   "plaatje": "🏖️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk616",
+   "naam": "Kikkerhoek",
+   "plaatje": "🐸",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk617",
+   "naam": "Postkantoor",
+   "plaatje": "📮",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#90cdf4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk618",
+   "naam": "Ontdekhoek",
+   "plaatje": "🔍",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk619",
+   "naam": "Safari",
+   "plaatje": "🦁",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#d6bcfa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk620",
+   "naam": "Jungle",
+   "plaatje": "🐒",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#fbb6ce",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk621",
+   "naam": "Vlinderhoek",
+   "plaatje": "🦋",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk622",
+   "naam": "Lichthoek",
+   "plaatje": "💡",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk623",
+   "naam": "Ruimteklei",
+   "plaatje": "🏺",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk624",
+   "naam": "Taalkast",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#faf089",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk625",
+   "naam": "Raket",
+   "plaatje": "🚀",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#9ae6b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk626",
+   "naam": "Strijkkralen",
+   "plaatje": "📿",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk627",
+   "naam": "Planetenhoek",
+   "plaatje": "🪐",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk628",
+   "naam": "Sterrenhoek",
+   "plaatje": "⭐",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk629",
+   "naam": "Schoonmaken",
+   "plaatje": "🧹",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#d6bcfa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk630",
+   "naam": "Patronen maken",
+   "plaatje": "🔷",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk631",
+   "naam": "Gekleurde rijst",
+   "plaatje": "🌾",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk632",
+   "naam": "Verteltafel",
+   "plaatje": "📖",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk633",
+   "naam": "Onderzoekscentrum",
+   "plaatje": "🔬",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk634",
+   "naam": "Kerstboom versieren",
+   "plaatje": "🎄",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk635",
+   "naam": "Knikkerbaan",
+   "plaatje": "🔮",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk636",
+   "naam": "Restauranthoek",
+   "plaatje": "🍽️",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#81e6d9",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk637",
+   "naam": "Bloemen",
+   "plaatje": "🌸",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk638",
+   "naam": "Duplo Constructie",
+   "plaatje": "🧱",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk639",
+   "naam": "Spiegelhoek",
+   "plaatje": "🪞",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk640",
+   "naam": "Playmobil",
+   "plaatje": "🧸",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk641",
+   "naam": "Schrijven in vogelzaad",
+   "plaatje": "🌾",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk642",
+   "naam": "Auto's",
+   "plaatje": "🚗",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk643",
+   "naam": "Coderen",
+   "plaatje": "🤖",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk644",
+   "naam": "Tuincentrum",
+   "plaatje": "🌱",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk645",
+   "naam": "BeeBot",
+   "plaatje": "🤖",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#9ae6b4",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk646",
+   "naam": "Rekenhoek",
+   "plaatje": "🔢",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk647",
+   "naam": "Ijshoek",
+   "plaatje": "🍦",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#90cdf4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk648",
+   "naam": "Ontdektafel",
+   "plaatje": "🔍",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#a3bffa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk649",
+   "naam": "Knex",
+   "plaatje": "🔩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk650",
+   "naam": "Smartgames",
+   "plaatje": "🧠",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk651",
+   "naam": "Puzzelhoek",
+   "plaatje": "🧩",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#cbd5e0",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk652",
+   "naam": "Electrisch circuit",
+   "plaatje": "🧱",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk653",
+   "naam": "Knex",
+   "plaatje": "🔩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk654",
+   "naam": "Pinnenbord",
+   "plaatje": "📌",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#faf089",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk655",
+   "naam": "Rijmhoek",
+   "plaatje": "🎶",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk656",
+   "naam": "Thema hoek",
+   "plaatje": "⭐",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk657",
+   "naam": "Werken aan thema met de juf",
+   "plaatje": "👩‍🏫",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk658",
+   "naam": "Mororiekhoek",
+   "plaatje": "🤸",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#a3bffa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk659",
+   "naam": "Thema hoek",
+   "plaatje": "⭐",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#d6bcfa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk660",
+   "naam": "Lettertafel",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk661",
+   "naam": "Thematafel",
+   "plaatje": "⭐",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk662",
+   "naam": "De herfsttafel",
+   "plaatje": "🍂",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk663",
+   "naam": "Sinttafel",
+   "plaatje": "🎁",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk664",
+   "naam": "Kersthoek",
+   "plaatje": "🎄",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk665",
+   "naam": "Spelkast taal",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk666",
+   "naam": "Beroepje spelen",
+   "plaatje": "👷",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#81e6d9",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk667",
+   "naam": "Taarten versieren",
+   "plaatje": "🎂",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk668",
+   "naam": "Bakkerij",
+   "plaatje": "🥖",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#a3bffa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk669",
+   "naam": "Verven",
+   "plaatje": "🎨",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk670",
+   "naam": "Bij de juf",
+   "plaatje": "👩‍🏫",
+   "foto": "",
+   "plekken": 6,
+   "kleur": "#fbb6ce",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk671",
+   "naam": "Computerhoek",
+   "plaatje": "💻",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk672",
+   "naam": "Poly dough",
+   "plaatje": "🏺",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk673",
+   "naam": "Hamertje tik",
+   "plaatje": "🔨",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk674",
+   "naam": "De uitvindershoek",
+   "plaatje": "💡",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk675",
+   "naam": "De watertafel",
+   "plaatje": "💧",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk676",
+   "naam": "De boerderij",
+   "plaatje": "🚜",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk677",
+   "naam": "Duplo boerderij",
+   "plaatje": "🧱",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk678",
+   "naam": "Tekenen met licht",
+   "plaatje": "💡",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk679",
+   "naam": "Het groentetuintje",
+   "plaatje": "🌱",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk680",
+   "naam": "Slinger maken boerderij",
+   "plaatje": "🚜",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk681",
+   "naam": "Paasei schrijfpatronen",
+   "plaatje": "📝",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk682",
+   "naam": "Gekleurde rijst en bonen",
+   "plaatje": "🌾",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk683",
+   "naam": "Letter twister",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk684",
+   "naam": "Kleurplaat kleuren",
+   "plaatje": "🖍️",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#faf089",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk685",
+   "naam": "Rijmhoek",
+   "plaatje": "🎶",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk686",
+   "naam": "Smart games",
+   "plaatje": "🧠",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk687",
+   "naam": "De supermarkt",
+   "plaatje": "🛒",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk688",
+   "naam": "Letter twister",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk689",
+   "naam": "De mini supermarkt",
+   "plaatje": "🛒",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk690",
+   "naam": "Rekenen met haas en eend",
+   "plaatje": "🐰",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk691",
+   "naam": "Detector tafel",
+   "plaatje": "🔎",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk692",
+   "naam": "De verfhoek",
+   "plaatje": "🎨",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk693",
+   "naam": "De kleurhoek",
+   "plaatje": "🖍️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk694",
+   "naam": "De lettertafel",
+   "plaatje": "🔤",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk695",
+   "naam": "De spelkast",
+   "plaatje": "🗄️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk696",
+   "naam": "De motoriekhoek",
+   "plaatje": "🤸",
+   "foto": "",
+   "plekken": 4,
+   "kleur": "#81e6d9",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk697",
+   "naam": "De verkleedhoek",
+   "plaatje": "👗",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#90cdf4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk698",
+   "naam": "Whiteboard",
+   "plaatje": "📋",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk699",
+   "naam": "Berenleesgrot",
+   "plaatje": "📚",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk700",
+   "naam": "Help de egels!",
+   "plaatje": "🦔",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk701",
+   "naam": "Gooi en schrijf",
+   "plaatje": "📝",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk702",
+   "naam": "De feestwinkel",
+   "plaatje": "🎈",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk703",
+   "naam": "Sinttafel",
+   "plaatje": "🎁",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk704",
+   "naam": "Kersttafel",
+   "plaatje": "🎄",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk705",
+   "naam": "Magnetische Tegels",
+   "plaatje": "🧲",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk706",
+   "naam": "Domino",
+   "plaatje": "🎲",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk707",
+   "naam": "Figuren maken",
+   "plaatje": "🔺",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk708",
+   "naam": "Laboratorium",
+   "plaatje": "🧪",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk709",
+   "naam": "Mini loco",
+   "plaatje": "🧩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk710",
+   "naam": "De computerhoek",
+   "plaatje": "💻",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk711",
+   "naam": "Werken aan thema",
+   "plaatje": "⭐",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk712",
+   "naam": "Lichtblok",
+   "plaatje": "💡",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk713",
+   "naam": "Lama's scheren",
+   "plaatje": "🦙",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk714",
+   "naam": "Het huis van de stokstaartjes",
+   "plaatje": "🦦",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk715",
+   "naam": "Zoek de dieren",
+   "plaatje": "🐾",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#9ae6b4",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk716",
+   "naam": "Verteltafel 'na-apers'",
+   "plaatje": "📖",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk717",
+   "naam": "Rekenpuzzel met cijfers",
+   "plaatje": "🧩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk718",
+   "naam": "De zintuighoek",
+   "plaatje": "👃",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk719",
+   "naam": "Mini loco",
+   "plaatje": "🧩",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk720",
+   "naam": "Zieken verzorgen",
+   "plaatje": "🩺",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk721",
+   "naam": "De huisartsenpraktijk",
+   "plaatje": "🩺",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#cbd5e0",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk722",
+   "naam": "Kaartjes maken",
+   "plaatje": "💌",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk723",
+   "naam": "De oranje tafel",
+   "plaatje": "🟠",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk724",
+   "naam": "Vul de vrachtwagens",
+   "plaatje": "🚚",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk725",
+   "naam": "Wegenbouw",
+   "plaatje": "🚧",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#9ae6b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk726",
+   "naam": "Themahoek: wegenstad bouwen",
+   "plaatje": "🚧",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#81e6d9",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk727",
+   "naam": "Fantasietafel",
+   "plaatje": "🦄",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk728",
+   "naam": "Ontdeltafel",
+   "plaatje": "🔍",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#a3bffa",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk729",
+   "naam": "Kleurhoek",
+   "plaatje": "🖍️",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk730",
+   "naam": "Het diamantenbos",
+   "plaatje": "💎",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbb6ce",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk731",
+   "naam": "Circus leeshoek",
+   "plaatje": "📚",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#cbd5e0",
+   "categorie": "Taal",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk732",
+   "naam": "Slingers maken",
+   "plaatje": "🎉",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#f8b4b4",
+   "categorie": "Creatief",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk733",
+   "naam": "Circus oefentent",
+   "plaatje": "🎪",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#fbd38d",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk734",
+   "naam": "Splitsen en schrijven met circusdieren",
+   "plaatje": "🔢",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#faf089",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk735",
+   "naam": "Acts ontwerpen",
+   "plaatje": "🎪",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#9ae6b4",
+   "categorie": "Constructief/motoriek",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk736",
+   "naam": "De geheime hoek",
+   "plaatje": "🤫",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#81e6d9",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk737",
+   "naam": "Spel aan tafel",
+   "plaatje": "🎲",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#90cdf4",
+   "categorie": "Spel",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk738",
+   "naam": "Ontdekhoek",
+   "plaatje": "🔍",
+   "foto": "",
+   "plekken": 3,
+   "kleur": "#a3bffa",
+   "categorie": "Overig",
+   "beschrijving": ""
+  },
+  {
+   "id": "dk739",
+   "naam": "Onderzoekshoek",
+   "plaatje": "🔬",
+   "foto": "",
+   "plekken": 2,
+   "kleur": "#d6bcfa",
+   "categorie": "Rekenen",
+   "beschrijving": ""
+  }
+ ],
+ "keuzeborden": [
+  {
+   "id": "dkbord0",
+   "naam": "Leven op de boerderij",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk669",
+     "plekken": 2
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk660",
+     "plekken": 2
+    },
+    {
+     "a": "dk658",
+     "plekken": 2
+    },
+    {
+     "a": "dk4",
+     "plekken": 4
+    },
+    {
+     "a": "dk676",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    },
+    {
+     "a": "dk677",
+     "plekken": 3
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk678",
+     "plekken": 2
+    },
+    {
+     "a": "dk679",
+     "plekken": 2
+    },
+    {
+     "a": "dk681",
+     "plekken": 2
+    }
+   ]
+  },
+  {
+   "id": "dkbord1",
+   "naam": "Springen, brullen, kriebelen!",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk8",
+     "plekken": 2
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk669",
+     "plekken": 2
+    },
+    {
+     "a": "dk698",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk695",
+     "plekken": 2
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk708",
+     "plekken": 2
+    },
+    {
+     "a": "dk694",
+     "plekken": 2
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk645",
+     "plekken": 2
+    },
+    {
+     "a": "dk712",
+     "plekken": 2
+    },
+    {
+     "a": "dk714",
+     "plekken": 2
+    },
+    {
+     "a": "dk716",
+     "plekken": 2
+    },
+    {
+     "a": "dk713",
+     "plekken": 2
+    },
+    {
+     "a": "dk696",
+     "plekken": 4
+    }
+   ]
+  },
+  {
+   "id": "dkbord2",
+   "naam": "Start 2025/2026",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk6",
+     "plekken": 3
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk15",
+     "plekken": 2
+    },
+    {
+     "a": "dk692",
+     "plekken": 2
+    },
+    {
+     "a": "dk693",
+     "plekken": 2
+    },
+    {
+     "a": "dk695",
+     "plekken": 2
+    },
+    {
+     "a": "dk694",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    },
+    {
+     "a": "dk698",
+     "plekken": 2
+    },
+    {
+     "a": "dk554",
+     "plekken": 3
+    },
+    {
+     "a": "dk696",
+     "plekken": 4
+    },
+    {
+     "a": "dk699",
+     "plekken": 2
+    }
+   ]
+  },
+  {
+   "id": "dkbord3",
+   "naam": "Welk beroep kies jij? (1e week)",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk8",
+     "plekken": 3
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk660",
+     "plekken": 2
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk668",
+     "plekken": 3
+    },
+    {
+     "a": "dk669",
+     "plekken": 2
+    },
+    {
+     "a": "dk617",
+     "plekken": 3
+    },
+    {
+     "a": "dk671",
+     "plekken": 2
+    },
+    {
+     "a": "dk665",
+     "plekken": 2
+    },
+    {
+     "a": "dk672",
+     "plekken": 2
+    },
+    {
+     "a": "dk673",
+     "plekken": 2
+    },
+    {
+     "a": "dk674",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    },
+    {
+     "a": "dk675",
+     "plekken": 2
+    }
+   ]
+  },
+  {
+   "id": "dkbord4",
+   "naam": "Wij ontdekken het heelal",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk8",
+     "plekken": 3
+    },
+    {
+     "a": "dk6",
+     "plekken": 3
+    },
+    {
+     "a": "dk662",
+     "plekken": 2
+    },
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk659",
+     "plekken": 3
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk15",
+     "plekken": 2
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk660",
+     "plekken": 2
+    },
+    {
+     "a": "dk4",
+     "plekken": 4
+    },
+    {
+     "a": "dk661",
+     "plekken": 2
+    },
+    {
+     "a": "dk664",
+     "plekken": 2
+    },
+    {
+     "a": "dk668",
+     "plekken": 3
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    }
+   ]
+  },
+  {
+   "id": "dkbord5",
+   "naam": "Wij vieren feest!",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk6",
+     "plekken": 3
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk693",
+     "plekken": 2
+    },
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk692",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 6
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk695",
+     "plekken": 2
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk15",
+     "plekken": 2
+    },
+    {
+     "a": "dk694",
+     "plekken": 2
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk25",
+     "plekken": 2
+    },
+    {
+     "a": "dk554",
+     "plekken": 4
+    },
+    {
+     "a": "dk704",
+     "plekken": 2
+    },
+    {
+     "a": "dk705",
+     "plekken": 2
+    },
+    {
+     "a": "dk696",
+     "plekken": 4
+    }
+   ]
+  },
+  {
+   "id": "dkbord6",
+   "naam": "Wij werken in de supermarkt",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk615",
+     "plekken": 2
+    },
+    {
+     "a": "dk590",
+     "plekken": 3
+    },
+    {
+     "a": "dk3",
+     "plekken": 3
+    },
+    {
+     "a": "dk669",
+     "plekken": 2
+    },
+    {
+     "a": "dk670",
+     "plekken": 5
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk686",
+     "plekken": 2
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk660",
+     "plekken": 2
+    },
+    {
+     "a": "dk688",
+     "plekken": 2
+    },
+    {
+     "a": "dk624",
+     "plekken": 2
+    },
+    {
+     "a": "dk646",
+     "plekken": 2
+    },
+    {
+     "a": "dk691",
+     "plekken": 2
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk6",
+     "plekken": 3
+    }
+   ]
+  },
+  {
+   "id": "dkbord7",
+   "naam": "witte week",
+   "beschrijving": "",
+   "items": [
+    {
+     "a": "dk8",
+     "plekken": 2
+    },
+    {
+     "a": "dk3",
+     "plekken": 4
+    },
+    {
+     "a": "dk651",
+     "plekken": 3
+    },
+    {
+     "a": "dk1",
+     "plekken": 3
+    },
+    {
+     "a": "dk670",
+     "plekken": 5
+    },
+    {
+     "a": "dk695",
+     "plekken": 2
+    },
+    {
+     "a": "dk5",
+     "plekken": 2
+    },
+    {
+     "a": "dk696",
+     "plekken": 4
+    },
+    {
+     "a": "dk25",
+     "plekken": 2
+    },
+    {
+     "a": "dk729",
+     "plekken": 2
+    },
+    {
+     "a": "dk734",
+     "plekken": 2
+    },
+    {
+     "a": "dk694",
+     "plekken": 2
+    },
+    {
+     "a": "dk6",
+     "plekken": 3
+    },
+    {
+     "a": "dk15",
+     "plekken": 2
+    },
+    {
+     "a": "dk14",
+     "plekken": 2
+    },
+    {
+     "a": "dk554",
+     "plekken": 3
+    },
+    {
+     "a": "dk738",
+     "plekken": 3
+    },
+    {
+     "a": "dk737",
+     "plekken": 2
+    },
+    {
+     "a": "dk739",
+     "plekken": 2
+    }
+   ]
+  }
+ ]
+}
