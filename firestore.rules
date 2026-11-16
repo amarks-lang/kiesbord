@@ -1,0 +1,74 @@
+rules_version = '2';
+// Keuzebord – Firestore-regels
+// Plak dit in Firebase console > Firestore Database > Regels > Publiceren.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function ingelogd() { return request.auth != null; }
+    function heeftDoc() { return exists(/databases/$(db)/documents/gebruikers/$(request.auth.uid)); }
+    function ik() { return get(/databases/$(db)/documents/gebruikers/$(request.auth.uid)).data; }
+    function isBeheerder(schoolId) {
+      return ingelogd() && heeftDoc() && ik().rol == 'beheerder' && ik().schoolId == schoolId;
+    }
+    function magKlas(schoolId, klasId) {
+      return ingelogd() && heeftDoc() && ik().schoolId == schoolId
+        && (ik().rol == 'beheerder' || klasId in ik().klasIds);
+    }
+    function uitnodiging() {
+      return get(/databases/$(db)/documents/uitnodigingen/$(request.auth.token.email)).data;
+    }
+
+    // ---- gebruikers ----
+    match /gebruikers/{uid} {
+      // je eigen document, of (als beheerder) dat van collega's op jouw school
+      allow read: if ingelogd() && (request.auth.uid == uid
+        || (heeftDoc() && ik().rol == 'beheerder' && resource.data.schoolId == ik().schoolId));
+
+      // Aanmaken kan op twee manieren:
+      // 1. eerste keer opstarten: je wordt beheerder van een NIEUWE school (die nog niet bestaat)
+      //    Wil je dit beperken tot je eigen organisatie? Voeg dan toe:
+      //    && request.auth.token.email.matches('.*@jouwschool[.]nl')
+      // 2. je bent door een beheerder uitgenodigd op je (bevestigde) e-mailadres
+      allow create: if ingelogd() && request.auth.uid == uid && (
+        (request.resource.data.rol == 'beheerder'
+          && !exists(/databases/$(db)/documents/scholen/$(request.resource.data.schoolId)))
+        ||
+        (request.auth.token.email_verified == true
+          && exists(/databases/$(db)/documents/uitnodigingen/$(request.auth.token.email))
+          && uitnodiging().schoolId == request.resource.data.schoolId
+          && uitnodiging().rol == request.resource.data.rol
+          && uitnodiging().klasIds == request.resource.data.klasIds)
+      );
+
+      // alleen een beheerder wijzigt rollen en klassen (binnen de eigen school)
+      allow update: if isBeheerder(resource.data.schoolId)
+        && request.resource.data.schoolId == resource.data.schoolId;
+      allow delete: if isBeheerder(resource.data.schoolId) && request.auth.uid != uid;
+    }
+
+    // ---- uitnodigingen (collega koppelen op e-mailadres) ----
+    match /uitnodigingen/{email} {
+      allow read: if ingelogd() && (request.auth.token.email == email
+        || isBeheerder(resource.data.schoolId));
+      allow create, update: if isBeheerder(request.resource.data.schoolId);
+      allow delete: if isBeheerder(resource.data.schoolId);
+    }
+
+    // ---- scholen en klassen ----
+    match /scholen/{schoolId} {
+      allow read: if ingelogd() && heeftDoc() && ik().schoolId == schoolId;
+      allow create, update: if isBeheerder(schoolId);
+
+      match /klassen/{klasId} {
+        allow read, update: if magKlas(schoolId, klasId);
+        allow create, delete: if isBeheerder(schoolId);
+
+        // kinderen, activiteiten, bord, keuzes, moetjes
+        match /{sub=**} {
+          allow read, write: if magKlas(schoolId, klasId);
+        }
+      }
+    }
+    // al het andere: geen toegang
+  }
+}

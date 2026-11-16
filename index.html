@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Keuzebord</title>
+<!--
+=====================================================================
+ KEUZEBORD – digitaal keuzebord voor groep 1/2          (één bestand)
+=====================================================================
+ FIREBASE OPZETTEN (eenmalig, ±10 minuten)
+ 1. Ga naar https://console.firebase.google.com en maak een project.
+    Zet Google Analytics UIT (deze app gebruikt geen analytics).
+ 2. Build > Authentication > Aan de slag > Sign-in method:
+    zet "Google" én "E-mail/wachtwoord" aan.
+ 3. Build > Firestore Database > Database maken > locatie
+    "europe-west4 (Netherlands)" > productiemodus.
+ 4. Firestore > tabblad Regels: plak de inhoud van firestore.rules
+    en klik op Publiceren.
+ 5. Authentication > Instellingen > Geautoriseerde domeinen: voeg het
+    domein toe waarop deze pagina staat (bijv. jouwnaam.github.io).
+ 6. Projectinstellingen (tandwiel) > Jouw apps > Web-app (</>) toevoegen.
+    Kopieer de waarden naar het blok firebaseConfig hieronder.
+ 7. Open de pagina en log in. De eerste gebruiker wordt beheerder en
+    maakt via een korte wizard de school en de eerste klas aan.
+    Collega's koppel je daarna bij Instellingen > Beheer (op e-mailadres).
+
+ PROBEERMODUS: zolang firebaseConfig niet is ingevuld draait de app
+ zonder Firebase en staat alles alleen in deze browser (localStorage).
+ Handig om te testen: Instellingen > "Demo-data laden".
+
+ DATAMODEL (Firestore)
+ gebruikers/{uid}            rol, schoolId, klasIds[], email
+ uitnodigingen/{email}       rol, schoolId, klasIds[]  (collega koppelen)
+ scholen/{schoolId}          naam
+ scholen/{s}/klassen/{k}     naam, pinHash, thema, themas[], geluid,
+                             toonTeller, dagkleuren[]
+   kinderen/{id}             naam, symbool, foto, actief, teller{actId:n}
+   activiteiten/{id}         naam, plaatje, foto, plekken, kleur,
+                             volgorde, actief, thema
+   bord/stand                rondeId, plaatsen{kindId:{a,s,k}}
+                             (a=activiteitId, s=start, k=keuzeId)
+   keuzes/{id}               kindId, activiteitId, start, eind,
+                             rondeId, datum
+   moetjes/{id}              datum, totDatum, activiteitId, heleGroep,
+                             kindIds[], afgerond[], planning{kindId:dag}
+ Ruimte voor later: activiteiten.doelen[] (SLO), keuzes.reflectie
+ (smiley), klassen.lokaal / gedeelde activiteiten (groepsdoorbroken),
+ collecties weekplan/ en jaarplan/ naast moetjes/.
+=====================================================================
+-->
+<script>
+// ======================= VUL DIT BLOK ZELF IN =======================
+window.firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+// ====================================================================
+</script>
+<style>
+:root{--bg:#fdf8ef;--ink:#3b3a4a;--zacht:#8a8798;--wit:#fff;--accent:#5b8def;--rond:22px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:Nunito,ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);overflow:hidden;font-size:17px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:14px;padding:.6em 1.1em;background:#e9e5f3;font-weight:700}
+button.pri{background:var(--accent);color:#fff}
+button.rood{background:#f6c9c9}
+button.klein{padding:.3em .7em;font-size:.9em}
+input,select{border:2px solid #ddd8e6;border-radius:12px;padding:.5em .7em;background:#fff;max-width:100%}
+input[type=color]{padding:2px;width:44px;height:40px}
+input[type=checkbox]{width:22px;height:22px;vertical-align:middle}
+h1,h2,h3{margin:.2em 0 .5em}
+.rij{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.zacht{color:var(--zacht);font-size:.9em}
+
+/* ---------- schermen (login, wizard, klaskeuze) ---------- */
+#scherm{position:fixed;inset:0;display:none;place-items:center;overflow:auto;padding:20px}
+body.st-scherm #scherm{display:grid}
+.kaart{background:#fff;border-radius:var(--rond);padding:26px;box-shadow:0 4px 18px #0001;width:min(460px,100%);display:flex;flex-direction:column;gap:12px}
+.kaart input{width:100%}
+.kaart .groot{font-size:64px;text-align:center}
+
+/* ---------- leerkrachtbalk ---------- */
+#balk{position:fixed;top:0;left:0;right:0;height:56px;display:none;align-items:center;gap:6px;padding:0 10px;background:#fff;box-shadow:0 2px 8px #0001;z-index:20;overflow-x:auto;white-space:nowrap}
+body.st-bord.lk #balk{display:flex}
+#balk button{background:none;padding:.5em .8em;flex:none}
+#balk button.aan{background:#e3ecff;color:#2456c9}
+#balk .spacer{flex:1}
+
+/* ---------- bord ---------- */
+#bord{position:fixed;inset:0;display:none;flex-direction:column;gap:10px;padding:10px;touch-action:none;user-select:none;-webkit-user-select:none}
+body.st-bord #bord{display:flex}
+body.st-bord.lk #bord{top:56px}
+body.st-bord.lk:not([data-tab=bord]) #bord{display:none}
+#grid{flex:1;min-height:0;display:grid;gap:10px}
+.act{min-width:0;min-height:0;overflow:hidden;display:flex;gap:6px;padding:8px;border-radius:var(--rond);border:4px solid var(--kl);background:color-mix(in srgb,var(--kl) 38%,#fff);transition:filter .3s,transform .15s}
+.act.vol{filter:grayscale(1) opacity(.6)}
+.act.doel{transform:scale(1.03);box-shadow:0 0 0 5px #fff,0 0 0 9px var(--kl)}
+.act .pl{width:36%;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;container-type:size;overflow:hidden}
+.act .pl span{font-size:56cqmin;line-height:1.1}
+.act .pl img{width:74cqmin;height:74cqmin;object-fit:cover;border-radius:18%}
+.act .pl b{font-size:clamp(11px,15cqmin,26px);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slots{flex:1;min-width:0;min-height:0;display:flex;flex-wrap:wrap;gap:6px;align-content:center;justify-content:center;overflow:hidden}
+.slot{width:var(--chip);height:var(--chip);flex:none;border-radius:50%;border:3px dashed #0003;background:#fff9;transform:scale(.78)}
+#onder{height:30%;flex:none;display:flex;gap:10px;min-height:0}
+#dagen{display:none;flex-direction:column;gap:6px;justify-content:center}
+#dagen.aan{display:flex}
+.dag{width:var(--d,52px);height:var(--d,52px);border-radius:50%;background:var(--dk);touch-action:none;cursor:grab;box-shadow:0 2px 5px #0003;flex:none}
+.dag.nu{outline:4px solid #fff;box-shadow:0 0 0 7px var(--dk)}
+#bak{flex:1;min-width:0;background:#fff;border-radius:var(--rond);box-shadow:inset 0 2px 8px #0001;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;overflow:hidden}
+#knoppen{display:flex;flex-direction:column;gap:10px;justify-content:space-between}
+.rondknop{width:64px;height:64px;border-radius:50%;padding:0;font-size:30px;background:#fff;box-shadow:0 2px 6px #0002;position:relative;touch-action:none}
+#tandwiel{opacity:.45}
+body.lk #tandwiel{visibility:hidden}
+.rondknop.houd::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:6px solid var(--accent);animation:vul var(--ms) linear forwards}
+@keyframes vul{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
+.chip{width:var(--chip);height:var(--chip);flex:none;border-radius:22%;background:#fff;box-shadow:0 2px 6px #0003;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;touch-action:none;cursor:grab}
+#bak .chip{background:#fff6e0}
+.chip .sym{font-size:calc(var(--chip)*.46);line-height:1.15}
+.chip img.sym{width:calc(var(--chip)*.58);height:calc(var(--chip)*.58);border-radius:50%;object-fit:cover}
+.chip .nm{font-size:max(9px,calc(var(--chip)*.17));font-weight:800;max-width:94%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1}
+.chip .mt{position:absolute;top:-5%;width:36%;height:36%;border-radius:50%;background:#fff;border:3px solid var(--dk,#bbb);font-size:calc(var(--chip)*.19);display:grid;place-items:center;right:-5%}
+.chip .mt+.mt{right:auto;left:-5%}
+.chip .tl{position:absolute;bottom:-5%;right:-5%;min-width:30%;padding:0 3px;height:30%;border-radius:99px;background:var(--ink);color:#fff;font-size:calc(var(--chip)*.17);font-weight:800;display:grid;place-items:center}
+.ghost{opacity:.25}
+.vlieg{position:fixed!important;z-index:1000;pointer-events:none;margin:0;box-shadow:0 10px 24px #0005}
+.vlieg.terug{transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+#hoek{position:fixed;left:8px;bottom:6px;z-index:30;display:flex;gap:6px;pointer-events:none}
+#hoek span{display:none;background:#fff;border-radius:99px;padding:2px 10px;font-size:13px;box-shadow:0 1px 4px #0002}
+body.offline #offline,body.lokaal.st-bord.lk #lokaal{display:block}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;z-index:2000;display:none;max-width:90vw}
+
+/* ---------- leerkrachtpaneel ---------- */
+#paneel{position:fixed;inset:56px 0 0 0;overflow:auto;padding:18px;display:none}
+body.st-bord.lk:not([data-tab=bord]) #paneel{display:block}
+.blok{background:#fff;border-radius:var(--rond);padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #0001}
+.tegels{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.tegel{background:#faf7ff;border-radius:16px;padding:10px;text-align:center;cursor:pointer;border:2px solid transparent}
+.tegel.uit{opacity:.45}
+.tegel .e{font-size:40px;line-height:1.2}
+.tegel img{width:54px;height:54px;border-radius:50%;object-fit:cover}
+.tegel.kies{border-color:var(--accent);background:#e3ecff}
+.arij{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;background:#faf7ff;margin-bottom:6px;border-left:10px solid var(--kl)}
+.arij.sleep{opacity:.6;background:#e3ecff}
+.arij.uit>*:not(.greep):not(button){opacity:.4}
+.arij .e{font-size:28px;width:40px;text-align:center}
+.arij .e img{width:36px;height:36px;border-radius:8px;object-fit:cover}
+.arij .n{flex:1;font-weight:700}
+.greep{cursor:grab;touch-action:none;font-size:22px;padding:0 8px;color:var(--zacht)}
+.epick{display:flex;flex-wrap:wrap;gap:4px;max-height:170px;overflow:auto}
+.epick button{background:#f4f1fa;padding:4px 8px;font-size:24px}
+.epick button.aan{background:var(--accent)}
+.kpick button{width:36px;height:36px;border-radius:50%;padding:0;background:var(--k);border:3px solid #fff}
+.kpick button.aan{outline:3px solid var(--ink)}
+dialog{border:0;border-radius:var(--rond);padding:22px;width:min(520px,94vw);max-height:92vh;box-shadow:0 10px 40px #0004;color:var(--ink)}
+dialog::backdrop{background:#3b3a4a66}
+dialog form,dialog .f{display:flex;flex-direction:column;gap:12px}
+dialog label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9em}
+dialog label.h{flex-direction:row;align-items:center;gap:8px}
+.pin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin button{font-size:28px;padding:.5em 0}
+.pinv{font-size:34px;letter-spacing:.4em;text-align:center;min-height:1.4em}
+table.heat{border-collapse:collapse;font-size:13px}
+table.heat th,table.heat td{padding:3px 5px;text-align:center;min-width:28px;border:1px solid #eee}
+table.heat th.k,table.heat td.k{text-align:left;white-space:nowrap;position:sticky;left:0;background:#fff}
+table.heat td.nul{color:#d55;background:#fff3f3;font-weight:800}
+.scroll{overflow:auto}
+.bar{display:grid;grid-template-columns:minmax(120px,200px) 1fr auto;gap:8px;align-items:center;margin:4px 0}
+.bar i{display:block;height:18px;border-radius:9px;background:var(--kl,var(--accent));min-width:2px}
+.bar.nul b{color:#d55}
+.printkop{display:none}
+@media (max-width:700px){body{font-size:15px}#paneel{padding:10px}.rondknop{width:52px;height:52px;font-size:24px}}
+@media print{
+  @page{size:A4;margin:14mm}
+  html,body{height:auto;overflow:visible;background:#fff;font-size:11pt}
+  #balk,#bord,#hoek,#toast,.noprint{display:none!important}
+  #paneel{position:static;display:block!important;padding:0;overflow:visible}
+  .blok{box-shadow:none;padding:0;break-inside:avoid}
+  .scroll{overflow:visible}
+  .printkop{display:block}
+  table.heat{font-size:8pt}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body class="st-scherm" data-tab="bord">
+<div id="scherm"><div class="kaart"><div class="groot">🧸</div><p style="text-align:center">Even laden…</p></div></div>
+<header id="balk"></header>
+<main id="bord">
+  <div id="grid"></div>
+  <div id="onder">
+    <div id="dagen"></div>
+    <div id="bak"></div>
+    <div id="knoppen">
+      <button id="tandwiel" class="rondknop" aria-label="Leerkracht (3 seconden vasthouden)">⚙️</button>
+      <button id="bezem" class="rondknop" aria-label="Opruimen, nieuwe ronde (vasthouden)">🧹</button>
+    </div>
+  </div>
+</main>
+<main id="paneel"></main>
+<div id="hoek"><span id="offline">📡 offline</span><span id="lokaal">🧪 probeermodus – data staat alleen in deze browser</span></div>
+<div id="toast"></div>
+<dialog id="dlg"></dialog>
+<script type="module">
+// ====================================================================
+//  Hulpjes
+// ====================================================================
+const $ = (s, el = document) => el.querySelector(s);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nieuwId = () => Array.from(crypto.getRandomValues(new Uint8Array(15)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+const dagStr = (t = Date.now()) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const zonderId = o => { const { id, ...r } = o || {}; return r; };
+const opNaam = (a, b) => a.naam.localeCompare(b.naam, 'nl');
+let toastT;
+function toast(t) { const el = $('#toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => el.style.display = 'none', 3500); }
+async function hash(t) {
+  if (crypto.subtle) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  let h = 5381; for (const c of t) h = (h * 33 ^ c.charCodeAt(0)) >>> 0; return 'x' + h;
+}
+
+const SYMBOLEN = '🐶 🐱 🐭 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐧 🦆 🦉 🦄 🐝 🦋 🐞 🐢 🐠 🐬 🐳 🦖 🐘 🦒 🦔 🚗 🚀 ⚽ 🎈 🌈 ⭐ 🌻 🍎 🍓 ☂️'.split(' ');
+const KLEUREN = ['#f8b4b4', '#fbd38d', '#faf089', '#9ae6b4', '#81e6d9', '#90cdf4', '#a3bffa', '#d6bcfa', '#fbb6ce', '#cbd5e0'];
+const DAGNAMEN = ['ma', 'di', 'wo', 'do', 'vr'];
+const DAGKLEUREN = ['#e85d5d', '#f2c94c', '#6fcf97', '#56a8e8', '#b07cd8']; // ma rood, di geel, wo groen, do blauw, vr paars (aanpasbaar bij Instellingen)
+const THEMAS = ['Herfst', 'Winter', 'Lente', 'Zomer', 'De winkel'];
+// naam, plaatje, plekken, kleurindex, thema
+const STANDAARD = [
+  ['Bouwhoek', '🧱', 4, 1], ['Huishoek', '🏠', 4, 8], ['Zandtafel', '🏖️', 3, 2], ['Watertafel', '💧', 3, 5], ['Verven', '🎨', 2, 0],
+  ['Tekenen', '✏️', 4, 6], ['Knutselen', '✂️', 4, 7], ['Kleien', '🏺', 4, 1], ['Puzzelen', '🧩', 4, 3], ['Leeshoek', '📚', 3, 4],
+  ['Computer', '💻', 2, 9], ['Constructie', '🔩', 4, 5], ['Kralen', '📿', 3, 8], ['Spelletjes', '🎲', 4, 0], ['Letterhoek', '🔤', 3, 6],
+  ['Rekenhoek', '🔢', 3, 3], ['Poppenkast', '🎭', 3, 7], ['Treinbaan', '🚂', 3, 2], ['Ontdekhoek', '🔍', 3, 4], ['Muziek', '🎵', 2, 9],
+  ['Herfsttafel', '🍂', 3, 1, 'Herfst'], ['Sneeuwhoek', '⛄', 3, 5, 'Winter'], ['Moestuin', '🌱', 3, 3, 'Lente'], ['Waterbaan', '🚿', 3, 4, 'Zomer'], ['Winkeltje', '🛒', 4, 0, 'De winkel'],
+];
+const standaardOps = basis => STANDAARD.map(([naam, plaatje, plekken, k, thema], i) => ({ p: `${basis}/activiteiten/std${i}`, d: { naam, plaatje, foto: '', plekken, kleur: KLEUREN[k], volgorde: i, actief: true, thema: thema || '' } }));
+
+// ====================================================================
+//  Datalaag: Firestore (FS) of probeermodus in localStorage (LS)
+//  Paden zijn strings: oneven aantal delen = collectie, even = document
+// ====================================================================
+const cfg = window.firebaseConfig || {};
+const LOKAAL = !cfg.apiKey || !cfg.projectId;
+const isCol = p => p.split('/').length % 2 === 1;
+let fb = null, DB = null;
+
+const FS = {
+  ref(p) { const s = p.split('/'); return s.length % 2 ? fb.collection(fb.db, ...s) : fb.doc(fb.db, ...s); },
+  sub(p, cb) {
+    const fout = e => console.warn('sync', p, e.code || e);
+    return isCol(p) ? fb.onSnapshot(this.ref(p), s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))), fout)
+      : fb.onSnapshot(this.ref(p), s => cb(s.exists() ? { id: s.id, ...s.data() } : null), fout);
+  },
+  async get(p) { const s = await fb.getDoc(this.ref(p)); return s.exists() ? { id: s.id, ...s.data() } : null; },
+  async list(p, veld, a, b) {
+    let q = this.ref(p);
+    if (veld && b !== undefined) q = fb.query(q, fb.where(veld, '>=', a), fb.where(veld, '<=', b));
+    else if (veld) q = fb.query(q, fb.where(veld, '==', a));
+    return (await fb.getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+  put(p, d, merge = true) { return fb.setDoc(this.ref(p), d, { merge }); },
+  del(p) { return fb.deleteDoc(this.ref(p)); },
+  async batch(ops) {
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = fb.writeBatch(fb.db);
+      for (const o of ops.slice(i, i + 400)) o.del ? b.delete(this.ref(o.p)) : b.set(this.ref(o.p), o.d, { merge: o.merge !== false });
+      const klaar = b.commit(); if (navigator.onLine) await klaar; else klaar.catch(() => { });
+    }
+  },
+  tx(p, fn) {
+    return fb.runTransaction(fb.db, async t => {
+      const s = await t.get(this.ref(p)); const r = fn(s.exists() ? s.data() : null);
+      t.set(this.ref(p), r.doc); for (const o of r.ops || []) t.set(this.ref(o.p), o.d, { merge: true });
+      return r;
+    });
+  },
+  inc: n => fb.increment(n), union: v => fb.arrayUnion(v), remove: v => fb.arrayRemove(v),
+};
+
+const LS = {
+  data: (() => { try { return JSON.parse(localStorage.getItem('keuzebord_lokaal') || '{}'); } catch (e) { return {}; } })(),
+  subs: new Set(), bezig: false,
+  meld() {
+    if (this.bezig) return; this.bezig = true;
+    setTimeout(() => { this.bezig = false; try { localStorage.setItem('keuzebord_lokaal', JSON.stringify(this.data)); } catch (e) { toast('Opslag in de browser is vol'); } for (const f of [...this.subs]) f(); }, 0);
+  },
+  een(p) { return this.data[p] ? { id: p.split('/').pop(), ...structuredClone(this.data[p]) } : null; },
+  alle(p) { const pre = p + '/'; return Object.keys(this.data).filter(k => k.startsWith(pre) && !k.slice(pre.length).includes('/')).map(k => this.een(k)); },
+  sub(p, cb) { const f = () => cb(isCol(p) ? this.alle(p) : this.een(p)); this.subs.add(f); setTimeout(f, 0); return () => this.subs.delete(f); },
+  async get(p) { return this.een(p); },
+  async list(p, veld, a, b) { return this.alle(p).filter(d => !veld || (b !== undefined ? d[veld] >= a && d[veld] <= b : d[veld] === a)); },
+  voegIn(doel, d) {
+    for (const [k, v] of Object.entries(d)) {
+      if (v && v.__inc) doel[k] = (doel[k] || 0) + v.__inc;
+      else if (v && v.__union) doel[k] = [...new Set([...(doel[k] || []), v.__union])];
+      else if (v && v.__rem) doel[k] = (doel[k] || []).filter(x => x !== v.__rem);
+      else if (v && typeof v === 'object' && !Array.isArray(v)) { if (!doel[k] || typeof doel[k] !== 'object') doel[k] = {}; this.voegIn(doel[k], v); }
+      else doel[k] = v;
+    }
+  },
+  put(p, d, merge = true) { if (!merge || !this.data[p]) this.data[p] = {}; this.voegIn(this.data[p], structuredClone(d)); this.meld(); return Promise.resolve(); },
+  del(p) { delete this.data[p]; this.meld(); return Promise.resolve(); },
+  async batch(ops) { for (const o of ops) o.del ? this.del(o.p) : this.put(o.p, o.d, o.merge !== false); },
+  async tx(p, fn) { const r = fn(this.data[p] ? structuredClone(this.data[p]) : null); this.put(p, r.doc, false); for (const o of r.ops || []) this.put(o.p, o.d); return r; },
+  inc: n => ({ __inc: n }), union: v => ({ __union: v }), remove: v => ({ __rem: v }),
+};
+
+// ====================================================================
+//  Toestand
+// ====================================================================
+const S = {
+  user: null, ik: null, klasId: null, klas: null, kids: [], acts: [], moetjes: [], stand: { plaatsen: {} },
+  wacht: {}, ghost: null, tab: 'bord', unsubs: [], klaar: {},
+  ov: { periode: 'week', weergave: 'kind', kind: '', van: dagStr(), tot: dagStr(), keuzes: null },
+  mf: { act: '', week: false, groep: true, kids: [] },
+};
+const SCHOOL = () => `scholen/${S.ik.schoolId}`;
+const KLAS = () => `${SCHOOL()}/klassen/${S.klasId}`;
+const K = p => `${KLAS()}/${p}`;
+const isBeheerder = () => S.ik?.rol === 'beheerder';
+const dagkleuren = () => S.klas?.dagkleuren?.length === 5 ? S.klas.dagkleuren : DAGKLEUREN;
+const vandaagIdx = () => (new Date().getDay() + 6) % 7; // 0 = maandag
+
+function scherm(html) { document.body.className = 'st-scherm' + (LOKAAL ? ' lokaal' : ''); $('#scherm').innerHTML = `<div class="kaart">${html}</div>`; return $('#scherm .kaart'); }
+
+// ====================================================================
+//  Opstarten, login, wizard, klaskeuze
+// ====================================================================
+async function start() {
+  const net = () => document.body.classList.toggle('offline', !navigator.onLine);
+  addEventListener('online', net); addEventListener('offline', net); net();
+  if (LOKAAL) {
+    DB = LS; S.user = { uid: 'lokaal', email: 'lokaal' };
+    S.ik = await DB.get('gebruikers/lokaal');
+    return S.ik ? naLogin() : wizard();
+  }
+  try {
+    const V = 'https://www.gstatic.com/firebasejs/10.14.1/';
+    const [a, au, fs] = await Promise.all([import(V + 'firebase-app.js'), import(V + 'firebase-auth.js'), import(V + 'firebase-firestore.js')]);
+    const app = a.initializeApp(cfg);
+    fb = { ...au, ...fs };
+    fb.db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
+    fb.auth = au.getAuth(app);
+    await au.setPersistence(fb.auth, au.browserLocalPersistence);
+    DB = FS;
+    au.onAuthStateChanged(fb.auth, naAuth);
+  } catch (e) { console.error(e); scherm(`<div class="groot">📡</div><p>Firebase kon niet geladen worden. Controleer de internetverbinding en het blok <b>firebaseConfig</b>.</p><p class="zacht">${esc(e.message)}</p><button class="pri" onclick="location.reload()">Opnieuw proberen</button>`); }
+}
+
+async function naAuth(u) {
+  stopSubs(); S.user = u; S.ik = null;
+  if (!u) return loginScherm();
+  const metWachtwoord = u.providerData.some(p => p.providerId === 'password');
+  if (metWachtwoord && !u.emailVerified) {
+    const k = scherm(`<div class="groot">✉️</div><h2>Bevestig je e-mailadres</h2><p>Er is een mail gestuurd naar <b>${esc(u.email)}</b>. Klik op de link in die mail en kom daarna hier terug.</p><button class="pri" id="her">Ik heb bevestigd</button><button id="weer">Mail opnieuw sturen</button><button id="uit">Uitloggen</button>`);
+    $('#her', k).onclick = async () => { await u.reload(); await u.getIdToken(true); naAuth(fb.auth.currentUser); };
+    $('#weer', k).onclick = () => fb.sendEmailVerification(u).then(() => toast('Mail verstuurd'), e => toast(e.message));
+    $('#uit', k).onclick = () => fb.signOut(fb.auth);
+    return;
+  }
+  try { S.ik = await DB.get('gebruikers/' + u.uid); } catch (e) { console.warn(e); }
+  if (!S.ik) {
+    let uitn = null; try { uitn = await DB.get('uitnodigingen/' + u.email.toLowerCase()); } catch (e) { }
+    if (!uitn) return wizard();
+    S.ik = { rol: uitn.rol, schoolId: uitn.schoolId, klasIds: uitn.klasIds, email: u.email.toLowerCase(), naam: u.displayName || '' };
+    try { await DB.put('gebruikers/' + u.uid, S.ik, false); } catch (e) { return scherm(`<p>Koppelen is niet gelukt: ${esc(e.message)}</p>`); }
+  }
+  naLogin();
+}
+
+function loginScherm() {
+  const k = scherm(`<div class="groot">🧸</div><h1 style="text-align:center">Keuzebord</h1>
+    <button class="pri" id="g">Inloggen met Google</button><p class="zacht" style="text-align:center">of met e-mail</p>
+    <input id="em" type="email" placeholder="E-mailadres" autocomplete="username"><input id="pw" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+    <div class="rij"><button id="in" class="pri">Inloggen</button><button id="nw">Account maken</button><button id="ver" class="klein">Wachtwoord vergeten</button></div><p id="fout" class="zacht"></p>`);
+  const fout = e => $('#fout', k).textContent = ({ 'auth/invalid-credential': 'E-mailadres of wachtwoord klopt niet.', 'auth/email-already-in-use': 'Er bestaat al een account met dit e-mailadres.', 'auth/weak-password': 'Kies een wachtwoord van minstens 6 tekens.', 'auth/invalid-email': 'Dit e-mailadres klopt niet.', 'auth/unauthorized-domain': 'Dit domein staat nog niet bij de geautoriseerde domeinen in Firebase.' })[e.code] || e.message;
+  const em = () => $('#em', k).value.trim(), pw = () => $('#pw', k).value;
+  $('#g', k).onclick = () => fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider()).catch(fout);
+  $('#in', k).onclick = () => fb.signInWithEmailAndPassword(fb.auth, em(), pw()).catch(fout);
+  $('#nw', k).onclick = () => fb.createUserWithEmailAndPassword(fb.auth, em(), pw()).then(c => fb.sendEmailVerification(c.user)).catch(fout);
+  $('#ver', k).onclick = () => fb.sendPasswordResetEmail(fb.auth, em()).then(() => toast('Er is een mail gestuurd om je wachtwoord te wijzigen'), fout);
+}
+
+function wizard() {
+  const k = scherm(`<div class="groot">🏫</div><h2>Welkom! Even instellen</h2>
+    <p class="zacht">Je bent de eerste gebruiker en wordt beheerder. Ben je door een collega uitgenodigd? Vraag dan of je e-mailadres gekoppeld is en log opnieuw in.</p>
+    <label>Naam van de school<input id="sn" placeholder="bijv. De Linde"></label>
+    <label>Naam van de klas<input id="kn" placeholder="bijv. Groep 1/2a"></label>
+    <label>Pincode voor de leerkrachtmodus (4 cijfers)<input id="pin" inputmode="numeric" maxlength="8" placeholder="1234"></label>
+    <button class="pri" id="ok">Aanmaken</button>${LOKAAL ? '' : '<button id="uit" class="klein">Uitloggen</button>'}`);
+  if (!LOKAAL) $('#uit', k).onclick = () => fb.signOut(fb.auth);
+  $('#ok', k).onclick = async () => {
+    const sn = $('#sn', k).value.trim(), kn = $('#kn', k).value.trim(), pin = $('#pin', k).value.trim();
+    if (!sn || !kn || !/^\d{4,8}$/.test(pin)) return toast('Vul alles in (pincode: 4 tot 8 cijfers)');
+    $('#ok', k).disabled = true;
+    try {
+      const schoolId = nieuwId(), klasId = nieuwId();
+      S.ik = { rol: 'beheerder', schoolId, klasIds: [klasId], email: (S.user.email || '').toLowerCase(), naam: S.user.displayName || '' };
+      await DB.put('gebruikers/' + S.user.uid, S.ik, false);
+      await DB.put(SCHOOL(), { naam: sn }, false);
+      await maakKlas(klasId, kn, pin);
+      localStorage.setItem('kb_klas', klasId); naLogin();
+    } catch (e) { console.error(e); toast('Mislukt: ' + e.message); $('#ok', k).disabled = false; }
+  };
+}
+
+async function maakKlas(klasId, naam, pin) {
+  const basis = `${SCHOOL()}/klassen/${klasId}`;
+  await DB.put(basis, { naam, pinHash: await hash(klasId + ':' + pin), thema: '', themas: THEMAS, geluid: true, toonTeller: false, dagkleuren: DAGKLEUREN }, false);
+  await DB.batch([...standaardOps(basis), { p: basis + '/bord/stand', d: { plaatsen: {}, rondeId: nieuwId() }, merge: false }]);
+}
+
+async function mijnKlassen() {
+  if (isBeheerder()) return (await DB.list(SCHOOL() + '/klassen')).sort(opNaam);
+  const r = await Promise.all((S.ik.klasIds || []).map(id => DB.get(`${SCHOOL()}/klassen/${id}`).catch(() => null)));
+  return r.filter(Boolean).sort(opNaam);
+}
+
+async function naLogin(kies = false) {
+  let klassen = [];
+  try { klassen = await mijnKlassen(); } catch (e) { console.warn(e); }
+  const bewaard = localStorage.getItem('kb_klas');
+  if (!kies && klassen.some(k => k.id === bewaard)) return openKlas(bewaard);
+  if (!kies && klassen.length === 1) return openKlas(klassen[0].id);
+  const k = scherm(`<div class="groot">🚪</div><h2>Kies een klas</h2>${klassen.length ? klassen.map(c => `<button class="pri" data-k="${c.id}">${esc(c.naam)}</button>`).join('') : '<p>Je bent nog niet aan een klas gekoppeld. Vraag de beheerder om je toe te voegen.</p>'}${LOKAAL ? '' : '<button id="uit" class="klein">Uitloggen</button>'}`);
+  k.onclick = e => { const id = e.target.dataset.k; if (id) openKlas(id); else if (e.target.id === 'uit') fb.signOut(fb.auth); };
+}
+
+function stopSubs() { S.unsubs.forEach(f => f()); S.unsubs = []; S.klaar = {}; S.klas = null; }
+function openKlas(klasId) {
+  stopSubs(); S.klasId = klasId; localStorage.setItem('kb_klas', klasId);
+  const op = (naam, pad, zet) => S.unsubs.push(DB.sub(pad, v => { zet(v); S.klaar[naam] = true; ververs(naam); }));
+  op('klas', KLAS(), v => S.klas = v || S.klas);
+  op('kids', K('kinderen'), v => S.kids = v.sort(opNaam));
+  op('acts', K('activiteiten'), v => S.acts = v.sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0)));
+  op('moetjes', K('moetjes'), v => S.moetjes = v);
+  op('stand', K('bord/stand'), v => S.stand = v || { plaatsen: {}, rondeId: nieuwId() });
+}
+function ververs(wat) {
+  if (!S.klas || !S.klaar.kids || !S.klaar.acts) return;
+  if (!document.body.classList.contains('st-bord')) { document.body.className = 'st-bord' + (LOKAAL ? ' lokaal' : '') + (navigator.onLine ? '' : ' offline'); zetTab('bord'); return; }
+  document.title = 'Keuzebord – ' + S.klas.naam;
+  renderBord();
+  if (document.body.classList.contains('lk') && ['kinderen', 'activiteiten', 'moetjes'].includes(S.tab) && !sorteert) renderTab();
+}
+
+// ====================================================================
+//  Het bord
+// ====================================================================
+const grid = $('#grid'), bak = $('#bak'), dagen = $('#dagen');
+const zichtbaar = () => S.acts.filter(a => a.actief !== false && (!a.thema || a.thema === S.klas.thema));
+const plaats = id => id in S.wacht ? S.wacht[id] : (S.stand.plaatsen?.[id]?.a || null);
+const moetjesNu = () => { const d = dagStr(); return S.moetjes.filter(m => m.datum <= d && (m.totDatum || m.datum) >= d); };
+const moetjesVan = id => moetjesNu().filter(m => (m.heleGroep || (m.kindIds || []).includes(id)) && !(m.afgerond || []).includes(id));
+const plaatje = (o, veld) => o.foto ? `<img src="${o.foto}" alt="">` : `<span>${esc(o[veld] || '❓')}</span>`;
+
+function chip(k, actId) {
+  const dk = dagkleuren();
+  const mt = moetjesVan(k.id).slice(0, 2).map(m => { const a = S.acts.find(x => x.id === m.activiteitId); const dg = m.planning?.[k.id]; return a ? `<span class="mt" style="${dg != null ? `--dk:${dk[dg]}` : ''}">${a.foto ? '📌' : esc(a.plaatje)}</span>` : ''; }).join('');
+  const tl = actId && S.klas.toonTeller ? `<span class="tl">${k.teller?.[actId] || 0}</span>` : '';
+  const g = S.ghost === k.id || sl?.kind === k.id ? ' ghost' : '';
+  return `<div class="chip${g}" data-kind="${k.id}">${k.foto ? `<img class="sym" src="${k.foto}" alt="">` : `<span class="sym">${esc(k.symbool || '🙂')}</span>`}<span class="nm">${esc(k.naam)}</span>${mt}${tl}</div>`;
+}
+
+function renderBord() {
+  if (!S.klas) return;
+  const acts = zichtbaar(), ids = new Set(acts.map(a => a.id)), kids = S.kids.filter(k => k.actief !== false), per = {}, los = [];
+  for (const k of kids) { const a = plaats(k.id); if (a && ids.has(a)) (per[a] ||= []).push(k); else los.push(k); }
+  grid.innerHTML = acts.map(a => {
+    const ks = per[a.id] || [], vrij = Math.max(0, a.plekken - ks.length);
+    return `<div class="act${vrij ? '' : ' vol'}" data-act="${a.id}" style="--kl:${a.kleur || '#cbd5e0'}"><div class="pl">${plaatje(a, 'plaatje')}<b>${esc(a.naam)}</b></div><div class="slots">${ks.map(k => chip(k, a.id)).join('')}${'<i class="slot"></i>'.repeat(vrij)}</div></div>`;
+  }).join('') || '<p style="margin:auto">Nog geen activiteiten. Houd het tandwiel 3 seconden ingedrukt.</p>';
+  bak.innerHTML = los.map(k => chip(k)).join('');
+  bak.dataset.n = kids.length;
+  const dk = dagkleuren(), nu = vandaagIdx();
+  dagen.classList.toggle('aan', moetjesNu().length > 0);
+  dagen.innerHTML = dk.map((c, i) => `<div class="dag${i === nu ? ' nu' : ''}" data-dag="${i}" style="--dk:${c}" title="${DAGNAMEN[i]}"></div>`).join('');
+  pasAan();
+}
+
+// grootste vierkant waarmee n vakjes in w×h passen
+function best(n, w, h, g) { let s = 0; for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c); s = Math.max(s, Math.min((w - g * (c - 1)) / c, (h - g * (r - 1)) / r)); } return Math.max(0, Math.floor(s)); }
+function pasAan() {
+  const n = grid.querySelectorAll('.act').length; if (!n || !grid.clientWidth) return;
+  const W = grid.clientWidth, H = grid.clientHeight, g = 10; let bc = 1, bs = 0;
+  for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), w = (W - g * (c - 1)) / c, h = (H - g * (r - 1)) / r, sc = Math.min(w / 1.8, h); if (sc > bs) { bs = sc; bc = c; } }
+  grid.style.gridTemplateColumns = `repeat(${bc},minmax(0,1fr))`; grid.style.gridTemplateRows = `repeat(${Math.ceil(n / bc)},minmax(0,1fr))`;
+  const maten = [...grid.querySelectorAll('.slots')].map(sl => [sl, best(sl.children.length, sl.clientWidth - 2, sl.clientHeight - 2, 6)]);
+  for (const [sl, m] of maten) sl.style.setProperty('--chip', m + 'px');
+  const oh = $('#onder').clientHeight;
+  dagen.style.setProperty('--d', Math.floor(Math.min(64, (oh - 24 - 4 * 6) / 5)) + 'px');
+  bak.style.setProperty('--chip', Math.min(150, best(Math.max(+bak.dataset.n || 1, 1), bak.clientWidth - 16, bak.clientHeight - 16, 8)) + 'px');
+}
+new ResizeObserver(() => pasAan()).observe($('#bord'));
+
+// ---------- geluid ----------
+let ac;
+function geluid() {
+  if (S.klas.geluid === false) return;
+  try {
+    ac ||= new (window.AudioContext || window.webkitAudioContext)();
+    [523, 659, 784].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * .09; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(.25, t + .02); g.gain.exponentialRampToValueAtTime(.001, t + .25); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + .3); });
+  } catch (e) { }
+}
+
+// ---------- kiezen (transactie: een hoek raakt nooit voller dan het maximum) ----------
+async function kies(kindId, actId) {
+  const nu = Date.now(), pad = K('bord/stand');
+  S.wacht[kindId] = actId; renderBord();
+  const bouw = stand => {
+    stand = zonderId(stand || { plaatsen: {}, rondeId: nieuwId() });
+    const pl = { ...(stand.plaatsen || {}) }, oud = pl[kindId], ops = [];
+    if (actId) {
+      const act = S.acts.find(a => a.id === actId), bezet = Object.entries(pl).filter(([k, v]) => v.a === actId && k !== kindId).length;
+      if (!act || bezet >= act.plekken) throw new Error('vol');
+    }
+    if (oud?.a === actId) return { doc: stand, ops: [], zelfde: true };
+    if (oud) ops.push({ p: K('keuzes/' + oud.k), d: { eind: nu } });
+    if (actId) { const kid = nieuwId(); pl[kindId] = { a: actId, s: nu, k: kid }; ops.push({ p: K('keuzes/' + kid), d: { kindId, activiteitId: actId, start: nu, eind: null, rondeId: stand.rondeId, datum: dagStr(nu) } }); }
+    else delete pl[kindId];
+    return { doc: { ...stand, plaatsen: pl }, ops };
+  };
+  let r;
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    r = await Promise.race([DB.tx(pad, bouw), new Promise((_, nee) => setTimeout(() => nee(new Error('traag')), 6000))]);
+  } catch (e) {
+    try {
+      if (e.message === 'vol') throw e;
+      // offline of haperend netwerk: schrijf direct; Firestore synchroniseert zodra er weer verbinding is
+      r = bouw(S.stand); DB.batch([{ p: pad, d: r.doc, merge: false }, ...r.ops]).catch(console.warn);
+    } catch (e2) { delete S.wacht[kindId]; renderBord(); return; }
+  }
+  S.stand = { ...r.doc }; delete S.wacht[kindId];
+  if (actId && !r.zelfde) {
+    geluid();
+    DB.put(K('kinderen/' + kindId), { teller: { [actId]: DB.inc(1) } }).catch(console.warn);
+    for (const m of moetjesVan(kindId)) if (m.activiteitId === actId) DB.put(K('moetjes/' + m.id), { afgerond: DB.union(kindId) }).catch(console.warn);
+  }
+  renderBord();
+}
+
+function opruimen() {
+  const nu = Date.now(), ops = Object.values(S.stand.plaatsen || {}).map(v => ({ p: K('keuzes/' + v.k), d: { eind: nu } }));
+  const doc = { plaatsen: {}, rondeId: nieuwId(), vorigeRonde: nu };
+  ops.push({ p: K('bord/stand'), d: doc, merge: false });
+  DB.batch(ops).catch(console.warn); S.stand = doc; S.wacht = {}; renderBord(); toast('Opgeruimd! Nieuwe ronde 🧹');
+}
+
+function planDag(kindId, dag) {
+  const ms = moetjesVan(kindId); if (!ms.length) return false;
+  for (const m of ms) DB.put(K('moetjes/' + m.id), { planning: { [kindId]: dag } }).catch(console.warn);
+  return true;
+}
+
+// ---------- slepen met Pointer Events ----------
+let sl = null;
+$('#bord').addEventListener('pointerdown', e => {
+  const bron = e.target.closest('.chip,.dag'); if (!bron || sl || e.button > 0) return;
+  e.preventDefault();
+  const r = bron.getBoundingClientRect(), kl = bron.cloneNode(true);
+  kl.classList.add('vlieg'); kl.classList.remove('ghost');
+  Object.assign(kl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  kl.style.setProperty('--chip', r.width + 'px'); kl.style.setProperty('--d', r.width + 'px');
+  document.body.append(kl);
+  sl = { kl, r, dx: e.clientX - r.left, dy: e.clientY - r.top, kind: bron.dataset.kind, dag: bron.dataset.dag, id: e.pointerId };
+  if (sl.kind) bron.classList.add('ghost');
+  beweeg(e);
+});
+function beweeg(e) {
+  if (!sl || e.pointerId !== sl.id) return;
+  sl.kl.style.transform = `translate(${e.clientX - sl.dx - sl.r.left}px,${e.clientY - sl.dy - sl.r.top}px) scale(1.12)`;
+  const doel = sl.kind ? document.elementFromPoint(e.clientX, e.clientY)?.closest('.act:not(.vol)') : null;
+  grid.querySelectorAll('.act.doel').forEach(a => a !== doel && a.classList.remove('doel')); doel?.classList.add('doel');
+}
+function terug() {
+  const s = sl; sl = null; if (!s) return; S.ghost = s.kind || null;
+  s.kl.classList.add('terug'); s.kl.style.transform = 'translate(0,0) scale(1)';
+  setTimeout(() => { s.kl.remove(); if (S.ghost === s.kind) S.ghost = null; renderBord(); }, 360);
+}
+function los(e) {
+  if (!sl || e.pointerId !== sl.id) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY), s = sl;
+  grid.querySelectorAll('.act.doel').forEach(a => a.classList.remove('doel'));
+  const weg = () => { s.kl.remove(); sl = null; };
+  if (s.dag != null) { const c = el?.closest('#bord .chip'); if (c && planDag(c.dataset.kind, +s.dag)) { weg(); geluid(); } else terug(); return; }
+  const act = el?.closest('.act'), huidig = plaats(s.kind);
+  if (act && act.dataset.act !== huidig) { if (act.classList.contains('vol')) terug(); else { weg(); kies(s.kind, act.dataset.act); } }
+  else if (el?.closest('#onder') && huidig) { weg(); kies(s.kind, null); }
+  else terug();
+}
+addEventListener('pointermove', beweeg);
+addEventListener('pointerup', los);
+addEventListener('pointercancel', e => { if (sl && e.pointerId === sl.id) terug(); });
+$('#bord').addEventListener('contextmenu', e => e.preventDefault());
+
+// ---------- lang indrukken ----------
+function houdIn(el, ms, fn) {
+  let t; const stop = () => { clearTimeout(t); el.classList.remove('houd'); };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); el.style.setProperty('--ms', ms + 'ms'); el.classList.add('houd'); t = setTimeout(() => { stop(); fn(); }, ms); });
+  for (const k of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(k, stop);
+}
+houdIn($('#tandwiel'), 3000, vraagPin);
+houdIn($('#bezem'), 1500, opruimen);
+
+// ====================================================================
+//  Leerkrachtmodus
+// ====================================================================
+const P = $('#paneel'), D = $('#dlg');
+let sorteert = false;
+function dlg(html) { D.innerHTML = html; if (!D.open) D.showModal(); return D; }
+D.addEventListener('click', e => { if (e.target.dataset.sluit != null) D.close(); });
+
+function vraagPin() {
+  if (!S.klas.pinHash) return leerkracht(true);
+  let v = '';
+  const d = dlg(`<div class="f"><h2 style="text-align:center">🔒 Pincode</h2><div class="pinv"></div><div class="pin">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-c="${n}">${n}</button>`).join('')}<button data-sluit>✖</button><button data-c="0">0</button><button data-c="ok" class="pri">✔</button></div></div>`);
+  $('.pin', d).onclick = async e => {
+    const c = e.target.dataset.c; if (c == null) return;
+    if (c !== 'ok') v += c;
+    else if (await hash(S.klasId + ':' + v) === S.klas.pinHash) { d.close(); return leerkracht(true); }
+    else { v = ''; toast('Onjuiste pincode'); }
+    $('.pinv', d).textContent = '●'.repeat(v.length);
+  };
+}
+function leerkracht(aan) { document.body.classList.toggle('lk', aan); zetTab('bord'); }
+
+const TABS = [['bord', '🧲 Bord'], ['overzicht', '📊 Overzicht'], ['moetjes', '📌 Moetjes'], ['kinderen', '🧒 Kinderen'], ['activiteiten', '🎨 Activiteiten'], ['instellingen', '⚙️ Instellingen']];
+function zetTab(t) {
+  S.tab = t; document.body.dataset.tab = t;
+  $('#balk').innerHTML = TABS.map(([id, n]) => `<button data-t="${id}" class="${id === t ? 'aan' : ''}">${n}</button>`).join('') + '<span class="spacer"></span><button data-x="fs">⛶ Volledig scherm</button><button data-x="kind">🔒 Kindmodus</button>';
+  if (t === 'bord') renderBord(); else if (t === 'overzicht') laadOv(); else renderTab();
+}
+function volledig() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => { }); }
+$('#balk').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.t) zetTab(b.dataset.t); else if (b.dataset.x === 'fs') volledig(); else leerkracht(false);
+};
+function renderTab() {
+  P.onclick = P.onchange = P.oninput = null;
+  ({ overzicht: tabOverzicht, moetjes: tabMoetjes, kinderen: tabKinderen, activiteiten: tabActiviteiten, instellingen: tabInstellingen })[S.tab]?.();
+}
+
+// ---------- foto's: verkleinen naar max 400px, JPEG 70%, base64 ----------
+function leesFoto(file) {
+  return new Promise((ok, nee) => {
+    const img = new Image();
+    img.onload = () => { const s = Math.min(1, 400 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); ok(c.toDataURL('image/jpeg', .7)); };
+    img.onerror = nee; img.src = URL.createObjectURL(file);
+  });
+}
+function teGroot(obj) { // Firestore-document mag maximaal 1 MiB zijn
+  const n = JSON.stringify(obj).length;
+  if (n > 900000) { alert('Dit document wordt te groot voor Firestore (max. 1 MB). Kies een kleinere foto.'); return true; }
+  if (n > 250000) toast('Let op: deze foto is vrij groot (' + Math.round(n / 1024) + ' kB)');
+  return false;
+}
+function fotoVeld(d, o) {
+  const toon = () => $('#f-prev', d).innerHTML = o.foto ? `<div class="rij"><img src="${o.foto}" style="width:70px;height:70px;object-fit:cover;border-radius:14px" alt=""><button type="button" class="klein" id="f-weg">Foto weghalen</button></div>` : '';
+  toon();
+  $('#f-foto', d).onchange = async e => { try { o.foto = await leesFoto(e.target.files[0]); toon(); } catch (x) { toast('Deze foto kan niet gelezen worden'); } };
+  $('#f-prev', d).onclick = e => { if (e.target.id === 'f-weg') { o.foto = ''; toon(); } };
+}
+const fotoHtml = '<label>Of een eigen foto<input type="file" accept="image/*" id="f-foto"></label><div id="f-prev"></div>';
+const knoppenHtml = nieuw => `<div class="rij"><button type="button" class="pri" id="f-ok">Opslaan</button><button type="button" data-sluit>Annuleren</button><span style="flex:1"></span>${nieuw ? '' : '<button type="button" class="rood" id="f-del">Verwijderen</button>'}</div>`;
+
+// ---------- Kinderen ----------
+function tabKinderen() {
+  P.innerHTML = `<div class="blok"><div class="rij"><h2 style="flex:1">Kinderen (${S.kids.length})</h2><button class="pri" data-nieuw>＋ Kind toevoegen</button></div>
+    <div class="tegels">${S.kids.map(k => `<div class="tegel${k.actief === false ? ' uit' : ''}" data-id="${k.id}">${k.foto ? `<img src="${k.foto}" alt="">` : `<div class="e">${esc(k.symbool)}</div>`}<div><b>${esc(k.naam)}</b></div></div>`).join('')}</div>
+    <p class="zacht">Privacy: gebruik alleen een voornaam (eventueel met de eerste letter van de achternaam). Er worden geen andere gegevens bewaard.</p></div>`;
+  P.onclick = e => { if (e.target.closest('[data-nieuw]')) kindDialoog(); else { const t = e.target.closest('.tegel'); if (t) kindDialoog(S.kids.find(k => k.id === t.dataset.id)); } };
+}
+function kindDialoog(bestaand) {
+  const vrij = SYMBOLEN.filter(s => !S.kids.some(k => k.symbool === s));
+  const o = bestaand ? { ...bestaand } : { naam: '', symbool: vrij[0] || SYMBOLEN[0], foto: '', actief: true };
+  const d = dlg(`<div class="f"><h2>${bestaand ? 'Kind bewerken' : 'Nieuw kind'}</h2>
+    <label>Voornaam<input id="f-naam" maxlength="18" value="${esc(o.naam)}"></label>
+    <label>Symbool</label><div class="epick">${SYMBOLEN.map(s => `<button type="button" data-s="${s}" class="${s === o.symbool ? 'aan' : ''}">${s}</button>`).join('')}</div>
+    ${fotoHtml}<label class="h"><input type="checkbox" id="f-actief" ${o.actief !== false ? 'checked' : ''}> Doet mee op het bord</label>${knoppenHtml(!bestaand)}</div>`);
+  fotoVeld(d, o);
+  $('.epick', d).onclick = e => { const s = e.target.dataset.s; if (!s) return; o.symbool = s; d.querySelectorAll('.epick button').forEach(b => b.classList.toggle('aan', b.dataset.s === s)); };
+  $('#f-ok', d).onclick = () => {
+    const doc = { naam: $('#f-naam', d).value.trim(), symbool: o.symbool, foto: o.foto || '', actief: $('#f-actief', d).checked };
+    if (!doc.naam) return toast('Vul een voornaam in'); if (teGroot(doc)) return;
+    DB.put(K('kinderen/' + (bestaand?.id || nieuwId())), doc).catch(e => toast(e.message)); d.close();
+  };
+  if (bestaand) $('#f-del', d).onclick = async () => {
+    if (!confirm(`${bestaand.naam} verwijderen? De keuzegeschiedenis blijft bewaard in de back-up, maar is niet meer zichtbaar.`)) return;
+    d.close(); if (S.stand.plaatsen?.[bestaand.id]) await kies(bestaand.id, null);
+    DB.del(K('kinderen/' + bestaand.id)).catch(e => toast(e.message));
+  };
+}
+
+// ---------- Activiteiten ----------
+function tabActiviteiten() {
+  P.innerHTML = `<div class="blok"><div class="rij"><h2 style="flex:1">Activiteiten</h2><button class="pri" data-nieuw>＋ Activiteit toevoegen</button></div>
+    <p class="zacht">Sleep aan ≡ om de volgorde te veranderen. Thema-activiteiten zijn alleen zichtbaar als dat thema gekozen is bij Instellingen${S.klas.thema ? ` (nu: ${esc(S.klas.thema)})` : ''}.</p>
+    <div id="alijst">${S.acts.map(a => `<div class="arij${a.actief === false ? ' uit' : ''}" data-id="${a.id}" style="--kl:${a.kleur}"><span class="greep">≡</span><span class="e">${a.foto ? `<img src="${a.foto}" alt="">` : esc(a.plaatje)}</span><span class="n">${esc(a.naam)}${a.thema ? ` <span class="zacht">· thema ${esc(a.thema)}</span>` : ''}</span><span class="zacht">${a.plekken} plekken</span><button class="klein" data-aan>${a.actief === false ? 'Uit' : 'Aan'}</button><button class="klein" data-bew>✏️</button></div>`).join('')}</div></div>`;
+  const lijst = $('#alijst');
+  P.onclick = e => {
+    if (e.target.closest('[data-nieuw]')) return actDialoog();
+    const rij = e.target.closest('.arij'); if (!rij) return; const a = S.acts.find(x => x.id === rij.dataset.id);
+    if (e.target.dataset.aan != null) DB.put(K('activiteiten/' + a.id), { actief: a.actief === false }); else if (e.target.dataset.bew != null) actDialoog(a);
+  };
+  lijst.onpointerdown = e => {
+    if (!e.target.closest('.greep')) return; e.preventDefault();
+    const rij = e.target.closest('.arij'); rij.classList.add('sleep'); sorteert = true;
+    const mv = ev => { const na = [...lijst.querySelectorAll('.arij:not(.sleep)')].find(o => { const r = o.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; }); lijst.insertBefore(rij, na || null); };
+    const up = () => {
+      removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); rij.classList.remove('sleep'); sorteert = false;
+      DB.batch([...lijst.querySelectorAll('.arij')].map((el, i) => ({ p: K('activiteiten/' + el.dataset.id), d: { volgorde: i } }))).catch(console.warn);
+    };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  };
+}
+function actDialoog(bestaand) {
+  const o = bestaand ? { ...bestaand } : { naam: '', plaatje: '⭐', foto: '', plekken: 4, kleur: KLEUREN[S.acts.length % KLEUREN.length], thema: '', actief: true };
+  const emo = [...new Set(STANDAARD.map(s => s[1]).concat('🧸 🚒 🏰 🦕 🪁 🧪 🪴 🍳 🩺 📮 🧺 🪵 🎪 ⭐'.split(' ')))];
+  const d = dlg(`<div class="f"><h2>${bestaand ? 'Activiteit bewerken' : 'Nieuwe activiteit'}</h2>
+    <label>Naam<input id="f-naam" maxlength="18" value="${esc(o.naam)}"></label>
+    <label>Plaatje (kies of typ zelf een emoji)<input id="f-pl" maxlength="8" value="${esc(o.plaatje)}" style="width:90px;font-size:26px;text-align:center"></label>
+    <div class="epick">${emo.map(s => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>${fotoHtml}
+    <div class="rij"><label>Plekken<input id="f-n" type="number" min="1" max="12" value="${o.plekken}" style="width:90px"></label>
+    <label>Thema<select id="f-th"><option value="">Altijd zichtbaar</option>${(S.klas.themas || THEMAS).map(t => `<option ${t === o.thema ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div>
+    <label>Kleur</label><div class="rij kpick">${KLEUREN.map(c => `<button type="button" data-k="${c}" style="--k:${c}" class="${c === o.kleur ? 'aan' : ''}"></button>`).join('')}</div>
+    <label class="h"><input type="checkbox" id="f-actief" ${o.actief !== false ? 'checked' : ''}> Staat aan (zichtbaar op het bord)</label>${knoppenHtml(!bestaand)}</div>`);
+  fotoVeld(d, o);
+  $('.epick', d).onclick = e => { if (e.target.dataset.s) $('#f-pl', d).value = e.target.dataset.s; };
+  $('.kpick', d).onclick = e => { const c = e.target.dataset.k; if (!c) return; o.kleur = c; d.querySelectorAll('.kpick button').forEach(b => b.classList.toggle('aan', b.dataset.k === c)); };
+  $('#f-ok', d).onclick = () => {
+    const doc = { naam: $('#f-naam', d).value.trim(), plaatje: $('#f-pl', d).value.trim() || '⭐', foto: o.foto || '', plekken: Math.min(12, Math.max(1, +$('#f-n', d).value || 1)), kleur: o.kleur, thema: $('#f-th', d).value, actief: $('#f-actief', d).checked };
+    if (!doc.naam) return toast('Vul een naam in'); if (teGroot(doc)) return;
+    if (!bestaand) doc.volgorde = S.acts.length ? Math.max(...S.acts.map(a => a.volgorde || 0)) + 1 : 0;
+    DB.put(K('activiteiten/' + (bestaand?.id || nieuwId())), doc).catch(e => toast(e.message)); d.close();
+  };
+  if (bestaand) $('#f-del', d).onclick = () => { if (confirm(`${bestaand.naam} verwijderen? Tip: je kunt een activiteit ook tijdelijk uitzetten.`)) { DB.del(K('activiteiten/' + bestaand.id)); d.close(); } };
+}
+
+// ---------- Moetjes ----------
+function tabMoetjes() {
+  const f = S.mf, acts = zichtbaar(), kids = S.kids.filter(k => k.actief !== false), d = dagStr(), dk = dagkleuren();
+  if (!acts.some(a => a.id === f.act)) f.act = acts[0]?.id || '';
+  const lijst = S.moetjes.filter(m => (m.totDatum || m.datum) >= d).sort((a, b) => a.datum.localeCompare(b.datum)), oud = S.moetjes.length - lijst.length;
+  P.innerHTML = `<div class="blok"><h2>Nieuw moetje</h2><div class="rij">
+      <select data-f="act">${acts.map(a => `<option value="${a.id}" ${a.id === f.act ? 'selected' : ''}>${esc(a.plaatje)} ${esc(a.naam)}</option>`).join('')}</select>
+      <select data-f="week"><option value="">Alleen vandaag</option><option value="1" ${f.week ? 'selected' : ''}>Deze hele week</option></select>
+      <select data-f="groep"><option value="1">Hele groep</option><option value="" ${f.groep ? '' : 'selected'}>Kinderen kiezen…</option></select>
+      <button class="pri" data-voegtoe>Toevoegen</button></div>
+    ${f.groep ? '' : `<div class="tegels" style="margin-top:12px">${kids.map(k => `<div class="tegel${f.kids.includes(k.id) ? ' kies' : ''}" data-kies="${k.id}">${esc(k.symbool)} ${esc(k.naam)}</div>`).join('')}</div>`}
+    <p class="zacht">Bij een weekmoetje slepen kinderen op het bord een dagkleur naar hun naamkaartje om in te plannen wanneer ze het doen: ${DAGNAMEN.map((n, i) => `<span style="background:${dk[i]};border-radius:99px;padding:1px 9px">${n}</span>`).join(' ')}</p></div>
+    <div class="blok"><h2>Lopende moetjes</h2>${lijst.map(m => {
+    const a = S.acts.find(x => x.id === m.activiteitId), wie = m.heleGroep ? kids : kids.filter(k => (m.kindIds || []).includes(k.id)), af = m.afgerond || [];
+    return `<div class="arij" style="--kl:${a?.kleur || '#ccc'};flex-wrap:wrap" data-m="${m.id}"><span class="e">${esc(a?.plaatje || '❓')}</span><span class="n">${esc(a?.naam || 'Verwijderde activiteit')} <span class="zacht">· ${m.datum === (m.totDatum || m.datum) ? m.datum : m.datum + ' t/m ' + m.totDatum} · ${wie.filter(k => af.includes(k.id)).length}/${wie.length} klaar</span></span><button class="klein rood" data-weg>Verwijderen</button>
+      <div class="rij" style="width:100%">${wie.map(k => `<button class="klein" data-vink="${k.id}" style="${af.includes(k.id) ? 'background:#c6f0d4' : ''}${m.planning?.[k.id] != null ? `;box-shadow:inset 0 -4px ${dk[m.planning[k.id]]}` : ''}">${af.includes(k.id) ? '✔' : '○'} ${esc(k.naam)}</button>`).join('')}</div></div>`;
+  }).join('') || '<p class="zacht">Er zijn nu geen moetjes.</p>'}${oud ? `<button class="klein" data-oud>${oud} oude moetjes opruimen</button>` : ''}<p class="zacht">Tik op een naam om een moetje handmatig af te vinken.</p></div>`;
+  P.onchange = e => { const k = e.target.dataset.f; if (!k) return; f[k] = k === 'act' ? e.target.value : !!e.target.value; tabMoetjes(); };
+  P.onclick = e => {
+    const t = e.target, rij = t.closest('[data-m]');
+    if (t.dataset.kies) { f.kids = f.kids.includes(t.dataset.kies) ? f.kids.filter(x => x !== t.dataset.kies) : [...f.kids, t.dataset.kies]; tabMoetjes(); }
+    else if (t.dataset.voegtoe != null) {
+      if (!f.act) return toast('Kies een activiteit'); if (!f.groep && !f.kids.length) return toast('Kies een of meer kinderen');
+      const vr = new Date(); vr.setDate(vr.getDate() - vandaagIdx() + 4);
+      DB.put(K('moetjes/' + nieuwId()), { datum: d, totDatum: f.week && dagStr(vr) > d ? dagStr(vr) : d, activiteitId: f.act, heleGroep: f.groep, kindIds: f.groep ? [] : f.kids, afgerond: [], planning: {} });
+      f.kids = []; toast('Moetje toegevoegd');
+    }
+    else if (t.dataset.oud != null) DB.batch(S.moetjes.filter(m => (m.totDatum || m.datum) < d).map(m => ({ p: K('moetjes/' + m.id), del: true })));
+    else if (rij && t.dataset.weg != null) DB.del(K('moetjes/' + rij.dataset.m));
+    else if (rij && t.dataset.vink) { const m = S.moetjes.find(x => x.id === rij.dataset.m), id = t.dataset.vink; DB.put(K('moetjes/' + m.id), { afgerond: (m.afgerond || []).includes(id) ? DB.remove(id) : DB.union(id) }); }
+  };
+}
+
+// ---------- Overzicht ----------
+function periode() {
+  const o = S.ov, nu = new Date(); let van;
+  if (o.periode === 'week') { van = new Date(nu); van.setDate(nu.getDate() - vandaagIdx()); }
+  else if (o.periode === 'maand') van = new Date(nu.getFullYear(), nu.getMonth(), 1);
+  else if (o.periode === 'jaar') van = new Date(nu.getMonth() >= 7 ? nu.getFullYear() : nu.getFullYear() - 1, 7, 1);
+  else return [new Date(o.van + 'T00:00').getTime(), new Date(o.tot + 'T23:59:59').getTime()];
+  van.setHours(0, 0, 0, 0); return [van.getTime(), Date.now()];
+}
+async function laadOv() {
+  const [a, b] = periode(); S.ov.keuzes = null; renderTab();
+  try { S.ov.keuzes = await DB.list(K('keuzes'), 'start', a, b); } catch (e) { S.ov.keuzes = []; toast('Laden mislukt: ' + e.message); }
+  if (S.tab === 'overzicht') renderTab();
+}
+function tabOverzicht() {
+  const o = S.ov, kids = S.kids.filter(k => k.actief !== false), acts = zichtbaar(), ks = o.keuzes, [van, tot] = periode();
+  const kop = `<div class="blok noprint"><div class="rij">
+    <select data-o="periode">${[['week', 'Deze week'], ['maand', 'Deze maand'], ['jaar', 'Dit schooljaar'], ['eigen', 'Eigen periode']].map(([v, n]) => `<option value="${v}" ${o.periode === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    ${o.periode === 'eigen' ? `<input type="date" data-o="van" value="${o.van}"> t/m <input type="date" data-o="tot" value="${o.tot}">` : ''}
+    <select data-o="weergave">${[['kind', 'Per kind'], ['act', 'Per activiteit'], ['samen', 'Wie speelt met wie']].map(([v, n]) => `<option value="${v}" ${o.weergave === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    ${o.weergave === 'kind' ? `<select data-o="kind"><option value="">Alle kinderen</option>${kids.map(k => `<option value="${k.id}" ${o.kind === k.id ? 'selected' : ''}>${esc(k.naam)}</option>`).join('')}</select>` : ''}
+    <span style="flex:1"></span><button class="pri" data-print>🖨️ Afdrukken</button></div></div>`;
+  P.onchange = e => { const k = e.target.dataset.o; if (!k) return; o[k] = e.target.value; ['periode', 'van', 'tot'].includes(k) ? laadOv() : renderTab(); };
+  P.onclick = e => { if (e.target.dataset.print != null) print(); };
+  if (!ks) { P.innerHTML = kop + '<div class="blok">Even laden…</div>'; return; }
+  const tel = {}, min = {}, perAct = {}, groep = {}, samen = {};
+  const duur = c => c.eind ? Math.min(c.eind - c.start, 2 * 3600e3) / 60000 : 0;
+  for (const c of ks) {
+    (tel[c.kindId] ||= {})[c.activiteitId] = (tel[c.kindId][c.activiteitId] || 0) + 1;
+    (min[c.kindId] ||= {})[c.activiteitId] = (min[c.kindId][c.activiteitId] || 0) + duur(c);
+    const p = perAct[c.activiteitId] ||= { n: 0, min: 0, kids: new Set() }; p.n++; p.min += duur(c); p.kids.add(c.kindId);
+    (groep[c.rondeId + '|' + c.activiteitId] ||= new Set()).add(c.kindId);
+  }
+  for (const g of Object.values(groep)) { const a = [...g]; for (const x of a) for (const y of a) if (x !== y) (samen[x] ||= {})[y] = (samen[x][y] || 0) + 1; }
+  const fmt = t => new Date(t).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const kleur = (n, max) => n ? `background:rgba(91,141,239,${(.15 + .7 * n / max).toFixed(2)})` : '';
+  const sym = k => k.foto ? '🙂' : esc(k.symbool);
+  let h = `<div class="blok"><h2 class="printkop">${esc(S.klas.naam)}</h2><p class="zacht">${fmt(van)} t/m ${fmt(tot)} · ${ks.length} keuzes</p>`;
+  if (o.weergave === 'kind' && o.kind) {
+    const k = kids.find(x => x.id === o.kind), t = tel[k.id] || {}, max = Math.max(1, ...Object.values(t));
+    const rij = [...acts].sort((a, b) => (t[b.id] || 0) - (t[a.id] || 0)), nooit = rij.filter(a => !t[a.id]);
+    const maatjes = Object.entries(samen[k.id] || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, n]) => { const m = S.kids.find(x => x.id === id); return m ? `${esc(m.naam)} (${n}×)` : ''; }).filter(Boolean);
+    h += `<h2>${sym(k)} ${esc(k.naam)}</h2>${rij.map(a => `<div class="bar${t[a.id] ? '' : ' nul'}" style="--kl:${a.kleur}"><b>${esc(a.plaatje)} ${esc(a.naam)}</b><i style="width:${100 * (t[a.id] || 0) / max}%"></i><span>${t[a.id] || 0}× · ${Math.round(min[k.id]?.[a.id] || 0)} min</span></div>`).join('')}
+      <p><b>Nog nooit gekozen:</b> ${nooit.map(a => esc(a.naam)).join(', ') || '–'}</p><p><b>Speelt het vaakst met:</b> ${maatjes.join(', ') || '–'}</p>`;
+  } else if (o.weergave === 'kind') {
+    const max = Math.max(1, ...Object.values(tel).flatMap(t => Object.values(t)));
+    h += `<div class="scroll"><table class="heat"><tr><th class="k">Kind</th>${acts.map(a => `<th title="${esc(a.naam)}">${esc(a.plaatje)}<br><small>${esc(a.naam.slice(0, 5))}</small></th>`).join('')}<th>Totaal</th></tr>
+      ${kids.map(k => { const t = tel[k.id] || {}; return `<tr><td class="k">${sym(k)} ${esc(k.naam)}</td>${acts.map(a => t[a.id] ? `<td style="${kleur(t[a.id], max)}">${t[a.id]}</td>` : '<td class="nul">·</td>').join('')}<td><b>${acts.reduce((s, a) => s + (t[a.id] || 0), 0)}</b></td></tr>`; }).join('')}</table></div>
+      <p class="zacht">Een rood vakje (·) betekent: in deze periode nooit gekozen.</p>`;
+  } else if (o.weergave === 'act') {
+    const max = Math.max(1, ...acts.map(a => perAct[a.id]?.n || 0));
+    h += [...acts].sort((a, b) => (perAct[b.id]?.n || 0) - (perAct[a.id]?.n || 0)).map(a => {
+      const p = perAct[a.id] || { n: 0, min: 0, kids: new Set() }, nooit = kids.filter(k => !p.kids.has(k.id));
+      return `<div class="bar${p.n ? '' : ' nul'}" style="--kl:${a.kleur}"><b>${esc(a.plaatje)} ${esc(a.naam)}</b><i style="width:${100 * p.n / max}%"></i><span>${p.n}× · ${p.kids.size} kinderen · gem. ${p.n ? Math.round(p.min / p.n) : 0} min</span></div><p class="zacht" style="margin:0 0 10px">Komt hier nooit: ${nooit.length === kids.length ? 'niemand is hier geweest' : nooit.map(k => esc(k.naam)).join(', ') || '–'}</p>`;
+    }).join('');
+  } else {
+    const max = Math.max(1, ...Object.values(samen).flatMap(t => Object.values(t)));
+    h += `<div class="scroll"><table class="heat"><tr><th class="k"></th>${kids.map(k => `<th title="${esc(k.naam)}">${sym(k)}<br><small>${esc(k.naam.slice(0, 4))}</small></th>`).join('')}</tr>
+      ${kids.map(k => `<tr><td class="k">${sym(k)} ${esc(k.naam)}</td>${kids.map(m => k.id === m.id ? '<td style="background:#eee"></td>' : `<td style="${kleur(samen[k.id]?.[m.id], max)}">${samen[k.id]?.[m.id] || ''}</td>`).join('')}</tr>`).join('')}</table></div>
+      <p class="zacht">Het getal is hoe vaak twee kinderen in dezelfde ronde in dezelfde hoek zaten.</p>`;
+  }
+  P.innerHTML = kop + h + '</div>';
+}
+
+// ---------- Instellingen ----------
+function tabInstellingen() {
+  const k = S.klas, dk = dagkleuren(), vink = (x, aan, tekst) => `<label class="rij"><input type="checkbox" data-i="${x}" ${aan ? 'checked' : ''}> ${tekst}</label>`;
+  P.innerHTML = `<div class="blok"><h2>Klas</h2><div class="rij"><label>Naam <input data-i="naam" value="${esc(k.naam)}"></label>
+      <label>Thema <select data-i="thema"><option value="">Geen thema</option>${(k.themas || THEMAS).map(t => `<option ${t === k.thema ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label><button class="klein" data-x="thema">＋ Nieuw thema</button></div>
+      <p>${vink('geluid', k.geluid !== false, 'Geluidje bij een geslaagde keuze')}</p><p>${vink('toonTeller', k.toonTeller, 'Toon op elk kaartje hoe vaak het kind deze activiteit al koos')}</p>
+      <div class="rij">Dagkleuren: ${DAGNAMEN.map((n, i) => `<label>${n} <input type="color" data-dk="${i}" value="${dk[i]}"></label>`).join('')}</div></div>
+    <div class="blok"><h2>Pincode</h2><div class="rij"><input id="i-pin" inputmode="numeric" maxlength="8" placeholder="Nieuwe pincode"><button data-x="pin">Pincode wijzigen</button></div></div>
+    <div class="blok"><h2>Back-up en testen</h2><div class="rij"><button data-x="export">⬇️ Exporteren (JSON)</button><label class="rij">⬆️ Importeren <input type="file" id="i-imp" accept=".json,application/json"></label><button data-x="demo">🧪 Demo-data laden</button></div></div>
+    <div class="blok"><h2>Dit apparaat</h2><div class="rij"><button data-x="fs">⛶ Volledig scherm</button><button data-x="wissel">🚪 Andere klas kiezen</button>${LOKAAL ? '<button class="rood" data-x="wis">Probeerdata wissen</button>' : `<button data-x="uit">Uitloggen (${esc(S.user.email)})</button>`}</div></div>
+    ${isBeheerder() ? '<div class="blok" id="beheer"><h2>Beheer</h2><p class="zacht">Even laden…</p></div>' : ''}`;
+  P.onchange = e => {
+    const t = e.target;
+    if (t.dataset.i) { const v = t.type === 'checkbox' ? t.checked : t.value.trim(); if (t.dataset.i === 'naam' && !v) return; DB.put(KLAS(), { [t.dataset.i]: v }); }
+    else if (t.dataset.dk) { const n = [...dagkleuren()]; n[+t.dataset.dk] = t.value; DB.put(KLAS(), { dagkleuren: n }); }
+    else if (t.id === 'i-imp' && t.files[0]) importeer(t.files[0]);
+    else if (t.dataset.u) { const [uid, veld] = t.dataset.u.split('|'), rij = t.closest('[data-rij]'); DB.put((veld === 'inv' ? 'uitnodigingen/' : 'gebruikers/') + uid, veld === 'rol' ? { rol: t.value } : { klasIds: [...rij.querySelectorAll('input:checked')].map(c => c.value) }).then(() => toast('Opgeslagen'), x => toast(x.message)); }
+  };
+  P.onclick = async e => {
+    const x = e.target.dataset.x; if (!x) return;
+    if (x === 'fs') volledig();
+    else if (x === 'thema') { const n = prompt('Naam van het nieuwe thema:')?.trim(); if (n) { await DB.put(KLAS(), { themas: [...new Set([...(S.klas.themas || THEMAS), n])], thema: n }); S.klas.themas = [...(S.klas.themas || THEMAS), n]; S.klas.thema = n; tabInstellingen(); } }
+    else if (x === 'pin') { const p = $('#i-pin').value.trim(); if (!/^\d{4,8}$/.test(p)) return toast('Een pincode heeft 4 tot 8 cijfers'); await DB.put(KLAS(), { pinHash: await hash(S.klasId + ':' + p) }); $('#i-pin').value = ''; toast('Pincode gewijzigd'); }
+    else if (x === 'export') exporteer(); else if (x === 'demo') demo();
+    else if (x === 'wissel') { stopSubs(); naLogin(true); }
+    else if (x === 'uit') { if (confirm('Uitloggen op dit apparaat?')) fb.signOut(fb.auth); }
+    else if (x === 'wis') { if (confirm('Alle probeerdata in deze browser wissen?')) { localStorage.removeItem('keuzebord_lokaal'); localStorage.removeItem('kb_klas'); LS.data = {}; location.reload(); } }
+    else if (x === 'klas') { const n = $('#b-kn').value.trim(), p = $('#b-kp').value.trim(); if (!n || !/^\d{4,8}$/.test(p)) return toast('Vul een naam en een pincode (4-8 cijfers) in'); const id = nieuwId(); try { await maakKlas(id, n, p); toast('Klas aangemaakt'); beheer(); } catch (err) { toast(err.message); } }
+    else if (x === 'nodig') {
+      const em = $('#b-em').value.trim().toLowerCase(), ids = [...document.querySelectorAll('#b-nk input:checked')].map(c => c.value);
+      if (!/^\S+@\S+\.\S+$/.test(em) || !ids.length) return toast('Vul een e-mailadres in en kies minstens één klas');
+      try { await DB.put('uitnodigingen/' + em, { schoolId: S.ik.schoolId, klasIds: ids, rol: $('#b-rol').value }, false); toast('Gekoppeld. Je collega kan nu inloggen met dit e-mailadres.'); beheer(); } catch (err) { toast(err.message); }
+    }
+    else if (x === 'invweg') { await DB.del('uitnodigingen/' + e.target.dataset.id); beheer(); }
+    else if (x === 'uweg') { if (confirm('Toegang van deze collega intrekken?')) { await DB.del('gebruikers/' + e.target.dataset.id); beheer(); } }
+  };
+  if (isBeheerder()) beheer();
+}
+async function beheer() {
+  const el = $('#beheer'); if (!el) return;
+  try {
+    const klassen = await mijnKlassen(), vinkjes = (aan, dis = '') => klassen.map(c => `<label class="h" style="display:inline-flex;margin-right:10px"><input type="checkbox" value="${c.id}" ${aan.includes(c.id) ? 'checked' : ''} ${dis}> ${esc(c.naam)}</label>`).join('');
+    let h = `<h2>Beheer</h2><h3>Klassen</h3><p>${klassen.map(c => esc(c.naam)).join(' · ')}</p><div class="rij"><input id="b-kn" placeholder="Naam nieuwe klas"><input id="b-kp" inputmode="numeric" maxlength="8" placeholder="Pincode" style="width:120px"><button data-x="klas">Klas aanmaken</button></div>`;
+    if (LOKAAL) h += '<p class="zacht">Collega\'s koppelen kan zodra Firebase is ingesteld.</p>';
+    else {
+      const [gebr, inv] = await Promise.all([DB.list('gebruikers', 'schoolId', S.ik.schoolId), DB.list('uitnodigingen', 'schoolId', S.ik.schoolId)]);
+      const open = inv.filter(i => !gebr.some(g => g.email === i.id));
+      h += `<h3>Collega's</h3>${gebr.map(g => `<div class="arij" data-rij style="--kl:#a3bffa;flex-wrap:wrap"><span class="n">${esc(g.email)}</span>${g.id === S.user.uid ? '<span class="zacht">jij · beheerder</span>' : `<select data-u="${g.id}|rol"><option value="leerkracht">Leerkracht</option><option value="beheerder" ${g.rol === 'beheerder' ? 'selected' : ''}>Beheerder</option></select><span data-u="${g.id}|klas">${vinkjes(g.klasIds || []).replaceAll('<input ', `<input data-u="${g.id}|klas" `)}</span><button class="klein rood" data-x="uweg" data-id="${g.id}">Intrekken</button>`}</div>`).join('')}
+        ${open.map(i => `<div class="arij" style="--kl:#fbd38d"><span class="n">${esc(i.id)} <span class="zacht">· nog niet ingelogd</span></span><button class="klein rood" data-x="invweg" data-id="${esc(i.id)}">Verwijderen</button></div>`).join('')}
+        <h3>Collega koppelen</h3><div class="rij"><input id="b-em" type="email" placeholder="E-mailadres van je collega"><select id="b-rol"><option value="leerkracht">Leerkracht</option><option value="beheerder">Beheerder</option></select><span id="b-nk">${vinkjes([S.klasId])}</span><button class="pri" data-x="nodig">Koppelen</button></div>
+        <p class="zacht">Je collega logt daarna zelf in met dit e-mailadres (Google of e-mail en wachtwoord) en komt automatisch in de gekozen klas(sen).</p>`;
+    }
+    el.innerHTML = h;
+  } catch (e) { el.innerHTML = `<h2>Beheer</h2><p>Laden mislukt: ${esc(e.message)}</p>`; }
+}
+
+// ---------- export, import, demo ----------
+async function exporteer() {
+  const [kinderen, activiteiten, moetjes, keuzes] = await Promise.all(['kinderen', 'activiteiten', 'moetjes', 'keuzes'].map(c => DB.list(K(c))));
+  const { pinHash, ...klas } = zonderId(S.klas);
+  const blob = new Blob([JSON.stringify({ soort: 'keuzebord-backup', versie: 1, datum: new Date().toISOString(), klas, stand: zonderId(S.stand), kinderen, activiteiten, moetjes, keuzes })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `keuzebord-${S.klas.naam.replace(/[^\w-]+/g, '_')}-${dagStr()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+async function importeer(file) {
+  try {
+    const d = JSON.parse(await file.text());
+    if (d.soort !== 'keuzebord-backup') throw new Error('Dit is geen back-up van het keuzebord');
+    if (!confirm(`Back-up van "${d.klas?.naam}" (${d.kinderen?.length || 0} kinderen, ${d.keuzes?.length || 0} keuzes) in deze klas zetten? Bestaande gegevens met dezelfde id worden overschreven.`)) return;
+    const ops = [{ p: KLAS(), d: d.klas || {} }, { p: K('bord/stand'), d: d.stand || { plaatsen: {}, rondeId: nieuwId() }, merge: false }];
+    for (const c of ['kinderen', 'activiteiten', 'moetjes', 'keuzes']) for (const x of d[c] || []) ops.push({ p: K(c + '/' + x.id), d: zonderId(x), merge: false });
+    await DB.batch(ops); toast('Back-up teruggezet');
+  } catch (e) { toast('Importeren mislukt: ' + e.message); }
+}
+async function demo() {
+  if (!confirm('Demo-data laden? Er komen 24 fictieve kinderen bij, met ongeveer vier weken keuzegeschiedenis.')) return;
+  toast('Demo-data wordt gemaakt…');
+  const ops = [], kies1 = a => a[Math.floor(Math.random() * a.length)];
+  const acts = S.acts.length ? zichtbaar() : STANDAARD.filter(s => !s[4]).map((s, i) => ({ id: 'std' + i, plekken: s[2] }));
+  if (!S.acts.length) ops.push(...standaardOps(KLAS()));
+  const kids = 'Emma Noah Sem Julia Liam Mila Lucas Tess Finn Sara Daan Zoë Levi Nora Luuk Evi Milan Lotte Bram Saar Mees Fenna Jesse Yara'.split(' ').map((naam, i) => ({ id: 'demo' + i, naam, symbool: SYMBOLEN[i], teller: {}, fav: [kies1(acts).id, kies1(acts).id, kies1(acts).id], nooit: [kies1(acts).id, kies1(acts).id] }));
+  let dagenTerug = 0, gedaan = 0;
+  while (gedaan < 20 && dagenTerug < 60) {
+    const dag = new Date(); dag.setDate(dag.getDate() - ++dagenTerug); if (dag.getDay() % 6 === 0) continue; gedaan++;
+    for (const uur of [9, 13]) {
+      const rondeId = nieuwId(), bezet = {};
+      for (const k of [...kids].sort(() => Math.random() - .5)) {
+        let a; for (let i = 0; i < 30 && !a; i++) { const c = Math.random() < .6 ? acts.find(x => x.id === kies1(k.fav)) : kies1(acts); if (c && !(k.nooit.includes(c.id) && !k.fav.includes(c.id)) && (bezet[c.id] || 0) < c.plekken) a = c; }
+        if (!a) continue; bezet[a.id] = (bezet[a.id] || 0) + 1; k.teller[a.id] = (k.teller[a.id] || 0) + 1;
+        const start = new Date(dag).setHours(uur, Math.floor(Math.random() * 6), 0, 0);
+        ops.push({ p: K('keuzes/' + nieuwId()), d: { kindId: k.id, activiteitId: a.id, start, eind: start + (20 + Math.floor(Math.random() * 26)) * 60000, rondeId, datum: dagStr(start) }, merge: false });
+      }
+    }
+  }
+  for (const k of kids) ops.push({ p: K('kinderen/' + k.id), d: { naam: k.naam, symbool: k.symbool, foto: '', actief: true, teller: k.teller }, merge: false });
+  const vr = new Date(); vr.setDate(vr.getDate() - vandaagIdx() + 4);
+  ops.push({ p: K('moetjes/demo'), d: { datum: dagStr(), totDatum: dagStr(vr) > dagStr() ? dagStr(vr) : dagStr(), activiteitId: acts[4 % acts.length].id, heleGroep: false, kindIds: kids.slice(0, 8).map(k => k.id), afgerond: [], planning: {} }, merge: false });
+  try { await DB.batch(ops); toast('Demo-data geladen 🎉'); zetTab('bord'); } catch (e) { toast('Mislukt: ' + e.message); }
+}
+
+start();
+</script>
+</body>
+</html>
