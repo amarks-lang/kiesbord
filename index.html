@@ -33,11 +33,13 @@
  gebruikers/{uid}            rol, schoolId, klasIds[], email
  uitnodigingen/{email}       rol, schoolId, klasIds[]  (collega koppelen)
  scholen/{schoolId}          naam
- scholen/{s}/klassen/{k}     naam, pinHash, thema, themas[], geluid,
+ scholen/{s}/klassen/{k}     naam, pinHash, categorieen[], keuzebordId, geluid,
                              toonTeller, dagkleuren[]
    kinderen/{id}             naam, symbool, foto, actief, teller{actId:n}
    activiteiten/{id}         naam, plaatje, foto, plekken, kleur,
-                             volgorde, actief, thema
+                             categorie, beschrijving   (de bibliotheek)
+   keuzeborden/{id}          naam, beschrijving, items[{a, plekken, kleur}]
+                             (a=activiteitId; een selectie, bijv. per thema)
    bord/stand                rondeId, plaatsen{kindId:{a,s,k}}
                              (a=activiteitId, s=start, k=keuzeId)
    keuzes/{id}               kindId, activiteitId, start, eind,
@@ -152,6 +154,15 @@ body.st-bord.lk:not([data-tab=bord]) #paneel{display:block}
 .arij .e img{width:36px;height:36px;border-radius:8px;object-fit:cover}
 .arij .n{flex:1;font-weight:700}
 .greep{cursor:grab;touch-action:none;font-size:22px;padding:0 8px;color:var(--zacht)}
+.tegels.groot{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.tegels.groot .e{font-size:56px}.tegels.groot img{width:100%;height:90px;border-radius:12px}
+.catbalk{margin:6px 0 14px;gap:6px}.catbalk button{background:#f4f1fa}.catbalk button.aan{background:var(--accent);color:#fff}
+.tweekol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:16px;align-items:start}
+@media (max-width:800px){.tweekol{grid-template-columns:1fr}}
+details{background:#faf7ff;border-radius:14px;padding:8px 12px;margin-bottom:8px}
+summary{font-weight:800;cursor:pointer;padding:4px 0}
+.kiesact{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:#fff;margin-top:6px}
+.kiesact .e{font-size:22px;width:30px;text-align:center}.kiesact img{width:28px;height:28px;border-radius:6px;object-fit:cover;vertical-align:middle}
 .epick{display:flex;flex-wrap:wrap;gap:4px;max-height:170px;overflow:auto}
 .epick button{background:#f4f1fa;padding:4px 8px;font-size:24px}
 .epick button.aan{background:var(--accent)}
@@ -227,16 +238,20 @@ const SYMBOLEN = '🐶 🐱 🐭 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 �
 const KLEUREN = ['#f8b4b4', '#fbd38d', '#faf089', '#9ae6b4', '#81e6d9', '#90cdf4', '#a3bffa', '#d6bcfa', '#fbb6ce', '#cbd5e0'];
 const DAGNAMEN = ['ma', 'di', 'wo', 'do', 'vr'];
 const DAGKLEUREN = ['#e85d5d', '#f2c94c', '#6fcf97', '#56a8e8', '#b07cd8']; // ma rood, di geel, wo groen, do blauw, vr paars (aanpasbaar bij Instellingen)
-const THEMAS = ['Herfst', 'Winter', 'Lente', 'Zomer', 'De winkel'];
-// naam, plaatje, plekken, kleurindex, thema
+const CATS = ['Constructief/motoriek', 'Creatief', 'Overig', 'Rekenen', 'Spel', 'Taal'];
+// naam, plaatje, plekken, kleurindex, categorie-index (de eerste 20 staan op het standaard-keuzebord)
 const STANDAARD = [
-  ['Bouwhoek', '🧱', 4, 1], ['Huishoek', '🏠', 4, 8], ['Zandtafel', '🏖️', 3, 2], ['Watertafel', '💧', 3, 5], ['Verven', '🎨', 2, 0],
-  ['Tekenen', '✏️', 4, 6], ['Knutselen', '✂️', 4, 7], ['Kleien', '🏺', 4, 1], ['Puzzelen', '🧩', 4, 3], ['Leeshoek', '📚', 3, 4],
-  ['Computer', '💻', 2, 9], ['Constructie', '🔩', 4, 5], ['Kralen', '📿', 3, 8], ['Spelletjes', '🎲', 4, 0], ['Letterhoek', '🔤', 3, 6],
-  ['Rekenhoek', '🔢', 3, 3], ['Poppenkast', '🎭', 3, 7], ['Treinbaan', '🚂', 3, 2], ['Ontdekhoek', '🔍', 3, 4], ['Muziek', '🎵', 2, 9],
-  ['Herfsttafel', '🍂', 3, 1, 'Herfst'], ['Sneeuwhoek', '⛄', 3, 5, 'Winter'], ['Moestuin', '🌱', 3, 3, 'Lente'], ['Waterbaan', '🚿', 3, 4, 'Zomer'], ['Winkeltje', '🛒', 4, 0, 'De winkel'],
+  ['Bouwhoek', '🧱', 4, 1, 0], ['Huishoek', '🏠', 4, 8, 4], ['Zandtafel', '🏖️', 3, 2, 0], ['Watertafel', '💧', 3, 5, 2], ['Verven', '🎨', 2, 0, 1],
+  ['Tekenen', '✏️', 4, 6, 1], ['Knutselen', '✂️', 4, 7, 1], ['Kleien', '🏺', 4, 1, 0], ['Puzzelen', '🧩', 4, 3, 3], ['Leeshoek', '📚', 3, 4, 5],
+  ['Computer', '💻', 2, 9, 2], ['Constructie', '🔩', 4, 5, 0], ['Kralen', '📿', 3, 8, 0], ['Spelletjes', '🎲', 4, 0, 4], ['Letterhoek', '🔤', 3, 6, 5],
+  ['Rekenhoek', '🔢', 3, 3, 3], ['Poppenkast', '🎭', 3, 7, 4], ['Treinbaan', '🚂', 3, 2, 0], ['Ontdekhoek', '🔍', 3, 4, 2], ['Muziek', '🎵', 2, 9, 1],
+  ['Herfsttafel', '🍂', 3, 1, 2], ['Sneeuwhoek', '⛄', 3, 5, 2], ['Moestuin', '🌱', 3, 3, 2], ['Waterbaan', '🚿', 3, 4, 0], ['Winkeltje', '🛒', 4, 0, 4],
+  ['Schrijfhoek', '📝', 2, 6, 5], ['Lettertafel', '🔠', 3, 4, 5], ['Telhoek', '🧮', 3, 3, 3], ['Motoriekhoek', '🤸', 4, 7, 0], ['Bij de juf', '👩‍🏫', 4, 9, 2],
 ];
-const standaardOps = basis => STANDAARD.map(([naam, plaatje, plekken, k, thema], i) => ({ p: `${basis}/activiteiten/std${i}`, d: { naam, plaatje, foto: '', plekken, kleur: KLEUREN[k], volgorde: i, actief: true, thema: thema || '' } }));
+const standaardOps = basis => [
+  ...STANDAARD.map(([naam, plaatje, plekken, k, c], i) => ({ p: `${basis}/activiteiten/std${i}`, d: { naam, plaatje, foto: '', plekken, kleur: KLEUREN[k], categorie: CATS[c], beschrijving: '' } })),
+  { p: `${basis}/keuzeborden/standaard`, d: { naam: 'Standaard', beschrijving: '', items: STANDAARD.slice(0, 20).map((s, i) => ({ a: 'std' + i })) }, merge: false },
+];
 
 // ====================================================================
 //  Datalaag: Firestore (FS) of probeermodus in localStorage (LS)
@@ -312,7 +327,7 @@ const LS = {
 //  Toestand
 // ====================================================================
 const S = {
-  user: null, ik: null, klasId: null, klas: null, kids: [], acts: [], moetjes: [], stand: { plaatsen: {} },
+  user: null, ik: null, klasId: null, klas: null, kids: [], acts: [], borden: [], bordEdit: null, cat: null, moetjes: [], stand: { plaatsen: {} },
   wacht: {}, ghost: null, tab: 'bord', unsubs: [], klaar: {},
   ov: { periode: 'week', weergave: 'kind', kind: '', van: dagStr(), tot: dagStr(), keuzes: null },
   mf: { act: '', week: false, groep: true, kids: [] },
@@ -409,7 +424,7 @@ function wizard() {
 
 async function maakKlas(klasId, naam, pin) {
   const basis = `${SCHOOL()}/klassen/${klasId}`;
-  await DB.put(basis, { naam, pinHash: await hash(klasId + ':' + pin), thema: '', themas: THEMAS, geluid: true, toonTeller: false, dagkleuren: DAGKLEUREN }, false);
+  await DB.put(basis, { naam, pinHash: await hash(klasId + ':' + pin), categorieen: CATS, keuzebordId: 'standaard', geluid: true, toonTeller: false, dagkleuren: DAGKLEUREN }, false);
   await DB.batch([...standaardOps(basis), { p: basis + '/bord/stand', d: { plaatsen: {}, rondeId: nieuwId() }, merge: false }]);
 }
 
@@ -435,7 +450,8 @@ function openKlas(klasId) {
   const op = (naam, pad, zet) => S.unsubs.push(DB.sub(pad, v => { zet(v); S.klaar[naam] = true; ververs(naam); }));
   op('klas', KLAS(), v => S.klas = v || S.klas);
   op('kids', K('kinderen'), v => S.kids = v.sort(opNaam));
-  op('acts', K('activiteiten'), v => S.acts = v.sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0)));
+  op('acts', K('activiteiten'), v => S.acts = v.sort(opNaam));
+  op('borden', K('keuzeborden'), v => S.borden = v.sort(opNaam));
   op('moetjes', K('moetjes'), v => S.moetjes = v);
   op('stand', K('bord/stand'), v => S.stand = v || { plaatsen: {}, rondeId: nieuwId() });
 }
@@ -444,14 +460,20 @@ function ververs(wat) {
   if (!document.body.classList.contains('st-bord')) { document.body.className = 'st-bord' + (LOKAAL ? ' lokaal' : '') + (navigator.onLine ? '' : ' offline'); zetTab('bord'); return; }
   document.title = 'Keuzebord – ' + S.klas.naam;
   renderBord();
-  if (document.body.classList.contains('lk') && ['kinderen', 'activiteiten', 'moetjes'].includes(S.tab) && !sorteert) renderTab();
+  if (document.body.classList.contains('lk') && ['kinderen', 'activiteiten', 'moetjes', 'keuzeborden'].includes(S.tab) && !sorteert) renderTab();
 }
 
 // ====================================================================
 //  Het bord
 // ====================================================================
 const grid = $('#grid'), bak = $('#bak'), dagen = $('#dagen');
-const zichtbaar = () => S.acts.filter(a => a.actief !== false && (!a.thema || a.thema === S.klas.thema));
+const cats = () => S.klas?.categorieen?.length ? S.klas.categorieen : CATS;
+const actiefBord = () => S.borden.find(b => b.id === S.klas?.keuzebordId) || null;
+// de activiteiten op het actieve keuzebord (met de kleur en het aantal plekken van dát bord); zonder keuzebord: alle activiteiten
+function zichtbaar() {
+  const b = actiefBord(); if (!b) return S.acts.filter(a => a.actief !== false);
+  return (b.items || []).map(it => { const a = S.acts.find(x => x.id === it.a); return a && { ...a, plekken: it.plekken || a.plekken, kleur: it.kleur || a.kleur }; }).filter(Boolean);
+}
 const plaats = id => id in S.wacht ? S.wacht[id] : (S.stand.plaatsen?.[id]?.a || null);
 const moetjesNu = () => { const d = dagStr(); return S.moetjes.filter(m => m.datum <= d && (m.totDatum || m.datum) >= d); };
 const moetjesVan = id => moetjesNu().filter(m => (m.heleGroep || (m.kindIds || []).includes(id)) && !(m.afgerond || []).includes(id));
@@ -472,7 +494,7 @@ function renderBord() {
   grid.innerHTML = acts.map(a => {
     const ks = per[a.id] || [], vrij = Math.max(0, a.plekken - ks.length);
     return `<div class="act${vrij ? '' : ' vol'}" data-act="${a.id}" style="--kl:${a.kleur || '#cbd5e0'}"><div class="pl">${plaatje(a, 'plaatje')}<b>${esc(a.naam)}</b></div><div class="slots">${ks.map(k => chip(k, a.id)).join('')}${'<i class="slot"></i>'.repeat(vrij)}</div></div>`;
-  }).join('') || '<p style="margin:auto">Nog geen activiteiten. Houd het tandwiel 3 seconden ingedrukt.</p>';
+  }).join('') || '<p style="margin:auto">Dit keuzebord is nog leeg. Houd het tandwiel 3 seconden ingedrukt.</p>';
   bak.innerHTML = los.map(k => chip(k)).join('');
   bak.dataset.n = kids.length;
   const dk = dagkleuren(), nu = vandaagIdx();
@@ -514,7 +536,7 @@ async function kies(kindId, actId) {
     stand = zonderId(stand || { plaatsen: {}, rondeId: nieuwId() });
     const pl = { ...(stand.plaatsen || {}) }, oud = pl[kindId], ops = [];
     if (actId) {
-      const act = S.acts.find(a => a.id === actId), bezet = Object.entries(pl).filter(([k, v]) => v.a === actId && k !== kindId).length;
+      const act = zichtbaar().find(a => a.id === actId), bezet = Object.entries(pl).filter(([k, v]) => v.a === actId && k !== kindId).length;
       if (!act || bezet >= act.plekken) throw new Error('vol');
     }
     if (oud?.a === actId) return { doc: stand, ops: [], zelfde: true };
@@ -628,7 +650,7 @@ function vraagPin() {
 }
 function leerkracht(aan) { document.body.classList.toggle('lk', aan); zetTab('bord'); }
 
-const TABS = [['bord', '🧲 Bord'], ['overzicht', '📊 Overzicht'], ['moetjes', '📌 Moetjes'], ['kinderen', '🧒 Kinderen'], ['activiteiten', '🎨 Activiteiten'], ['instellingen', '⚙️ Instellingen']];
+const TABS = [['bord', '🧲 Bord'], ['overzicht', '📊 Overzicht'], ['moetjes', '📌 Moetjes'], ['kinderen', '🧒 Kinderen'], ['keuzeborden', '📋 Keuzeborden'], ['activiteiten', '🎨 Activiteiten'], ['instellingen', '⚙️ Instellingen']];
 function zetTab(t) {
   S.tab = t; document.body.dataset.tab = t;
   $('#balk').innerHTML = TABS.map(([id, n]) => `<button data-t="${id}" class="${id === t ? 'aan' : ''}">${n}</button>`).join('') + '<span class="spacer"></span><button data-x="fs">⛶ Volledig scherm</button><button data-x="kind">🔒 Kindmodus</button>';
@@ -641,7 +663,7 @@ $('#balk').onclick = e => {
 };
 function renderTab() {
   P.onclick = P.onchange = P.oninput = null;
-  ({ overzicht: tabOverzicht, moetjes: tabMoetjes, kinderen: tabKinderen, activiteiten: tabActiviteiten, instellingen: tabInstellingen })[S.tab]?.();
+  ({ overzicht: tabOverzicht, moetjes: tabMoetjes, kinderen: tabKinderen, keuzeborden: tabKeuzeborden, activiteiten: tabActiviteiten, instellingen: tabInstellingen })[S.tab]?.();
 }
 
 // ---------- foto's: verkleinen naar max 400px, JPEG 70%, base64 ----------
@@ -695,49 +717,114 @@ function kindDialoog(bestaand) {
   };
 }
 
-// ---------- Activiteiten ----------
+// ---------- Activiteiten (bibliotheek, per categorie) ----------
+const catVan = a => cats().includes(a.categorie) ? a.categorie : (cats().includes('Overig') ? 'Overig' : cats()[0]);
 function tabActiviteiten() {
-  P.innerHTML = `<div class="blok"><div class="rij"><h2 style="flex:1">Activiteiten</h2><button class="pri" data-nieuw>＋ Activiteit toevoegen</button></div>
-    <p class="zacht">Sleep aan ≡ om de volgorde te veranderen. Thema-activiteiten zijn alleen zichtbaar als dat thema gekozen is bij Instellingen${S.klas.thema ? ` (nu: ${esc(S.klas.thema)})` : ''}.</p>
-    <div id="alijst">${S.acts.map(a => `<div class="arij${a.actief === false ? ' uit' : ''}" data-id="${a.id}" style="--kl:${a.kleur}"><span class="greep">≡</span><span class="e">${a.foto ? `<img src="${a.foto}" alt="">` : esc(a.plaatje)}</span><span class="n">${esc(a.naam)}${a.thema ? ` <span class="zacht">· thema ${esc(a.thema)}</span>` : ''}</span><span class="zacht">${a.plekken} plekken</span><button class="klein" data-aan>${a.actief === false ? 'Uit' : 'Aan'}</button><button class="klein" data-bew>✏️</button></div>`).join('')}</div></div>`;
-  const lijst = $('#alijst');
+  const cs = cats(); if (!cs.includes(S.cat)) S.cat = cs[0];
+  const opBord = new Set(zichtbaar().map(a => a.id)), lijst = S.acts.filter(a => catVan(a) === S.cat);
+  P.innerHTML = `<div class="blok"><div class="rij"><h2 style="flex:1">Activiteiten</h2><button class="pri" data-nieuw>＋ Voeg activiteit toe</button><button data-cats>🗂️ Categorieën</button></div>
+    <div class="rij catbalk">${cs.map(c => `<button data-cat="${esc(c)}" class="${c === S.cat ? 'aan' : ''}">${esc(c)} <small>${S.acts.filter(a => catVan(a) === c).length}</small></button>`).join('')}</div>
+    <div class="tegels groot">${lijst.map(a => `<div class="tegel" data-id="${a.id}" style="border-top:8px solid ${a.kleur || '#ccc'}">${a.foto ? `<img src="${a.foto}" alt="">` : `<div class="e">${esc(a.plaatje)}</div>`}<div><b>${esc(a.naam)}</b></div><div class="zacht">Aantal kinderen: ${a.plekken}</div>${a.beschrijving ? `<div class="zacht">${esc(a.beschrijving)}</div>` : ''}${opBord.has(a.id) ? '<div class="zacht">📋 staat op het bord</div>' : ''}</div>`).join('') || '<p class="zacht">Nog geen activiteiten in deze categorie.</p>'}</div>
+    <p class="zacht">Hier maak je activiteiten klaar. Bij <b>Keuzeborden</b> kies je welke activiteiten op het bord komen.</p></div>`;
   P.onclick = e => {
-    if (e.target.closest('[data-nieuw]')) return actDialoog();
-    const rij = e.target.closest('.arij'); if (!rij) return; const a = S.acts.find(x => x.id === rij.dataset.id);
-    if (e.target.dataset.aan != null) DB.put(K('activiteiten/' + a.id), { actief: a.actief === false }); else if (e.target.dataset.bew != null) actDialoog(a);
-  };
-  lijst.onpointerdown = e => {
-    if (!e.target.closest('.greep')) return; e.preventDefault();
-    const rij = e.target.closest('.arij'); rij.classList.add('sleep'); sorteert = true;
-    const mv = ev => { const na = [...lijst.querySelectorAll('.arij:not(.sleep)')].find(o => { const r = o.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; }); lijst.insertBefore(rij, na || null); };
-    const up = () => {
-      removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); rij.classList.remove('sleep'); sorteert = false;
-      DB.batch([...lijst.querySelectorAll('.arij')].map((el, i) => ({ p: K('activiteiten/' + el.dataset.id), d: { volgorde: i } }))).catch(console.warn);
-    };
-    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    const t = e.target.closest('button,.tegel'); if (!t) return;
+    if (t.dataset.nieuw != null) actDialoog(); else if (t.dataset.cats != null) catDialoog();
+    else if (t.dataset.cat) { S.cat = t.dataset.cat; tabActiviteiten(); }
+    else if (t.dataset.id) actDialoog(S.acts.find(a => a.id === t.dataset.id));
   };
 }
 function actDialoog(bestaand) {
-  const o = bestaand ? { ...bestaand } : { naam: '', plaatje: '⭐', foto: '', plekken: 4, kleur: KLEUREN[S.acts.length % KLEUREN.length], thema: '', actief: true };
-  const emo = [...new Set(STANDAARD.map(s => s[1]).concat('🧸 🚒 🏰 🦕 🪁 🧪 🪴 🍳 🩺 📮 🧺 🪵 🎪 ⭐'.split(' ')))];
-  const d = dlg(`<div class="f"><h2>${bestaand ? 'Activiteit bewerken' : 'Nieuwe activiteit'}</h2>
-    <label>Naam<input id="f-naam" maxlength="18" value="${esc(o.naam)}"></label>
-    <label>Plaatje (kies of typ zelf een emoji)<input id="f-pl" maxlength="8" value="${esc(o.plaatje)}" style="width:90px;font-size:26px;text-align:center"></label>
-    <div class="epick">${emo.map(s => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>${fotoHtml}
-    <div class="rij"><label>Plekken<input id="f-n" type="number" min="1" max="12" value="${o.plekken}" style="width:90px"></label>
-    <label>Thema<select id="f-th"><option value="">Altijd zichtbaar</option>${(S.klas.themas || THEMAS).map(t => `<option ${t === o.thema ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label></div>
-    <label>Kleur</label><div class="rij kpick">${KLEUREN.map(c => `<button type="button" data-k="${c}" style="--k:${c}" class="${c === o.kleur ? 'aan' : ''}"></button>`).join('')}</div>
-    <label class="h"><input type="checkbox" id="f-actief" ${o.actief !== false ? 'checked' : ''}> Staat aan (zichtbaar op het bord)</label>${knoppenHtml(!bestaand)}</div>`);
+  const o = bestaand ? { ...bestaand } : { naam: '', plaatje: '⭐', foto: '', plekken: 2, kleur: KLEUREN[S.acts.length % KLEUREN.length], categorie: S.cat || cats()[0], beschrijving: '' };
+  const emo = [...new Set(STANDAARD.map(s => s[1]).concat('🧸 🚒 🏰 🦕 🪁 🧪 🪴 🍳 🩺 📮 🧺 🪵 🎪 🌸 🎄 🚜 🪐 ⭐'.split(' ')))];
+  const d = dlg(`<div class="f"><h2>${bestaand ? 'Activiteit wijzigen' : 'Activiteit toevoegen'}</h2>
+    <label>Naam<input id="f-naam" maxlength="30" value="${esc(o.naam)}"></label>
+    <div class="rij"><label style="flex:1">Categorie<select id="f-cat">${cats().map(c => `<option ${c === catVan(o) ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+    <label>Maximaal aantal kinderen<select id="f-n">${Array.from({ length: 15 }, (_, i) => `<option ${i + 1 === +o.plekken ? 'selected' : ''}>${i + 1}</option>`).join('')}</select></label></div>
+    <label>Beschrijving<input id="f-bes" maxlength="200" value="${esc(o.beschrijving || '')}"></label>
+    <label>Afbeelding: kies of typ een emoji<input id="f-pl" maxlength="8" value="${esc(o.plaatje)}" style="width:90px;font-size:26px;text-align:center"></label>
+    <div class="epick">${emo.map(s => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>${fotoHtml.replace('Of een eigen foto', 'Of een foto van de echte hoek')}
+    <label>Kleur</label><div class="rij kpick">${KLEUREN.map(c => `<button type="button" data-k="${c}" style="--k:${c}" class="${c === o.kleur ? 'aan' : ''}"></button>`).join('')}</div>${knoppenHtml(!bestaand)}</div>`);
   fotoVeld(d, o);
   $('.epick', d).onclick = e => { if (e.target.dataset.s) $('#f-pl', d).value = e.target.dataset.s; };
   $('.kpick', d).onclick = e => { const c = e.target.dataset.k; if (!c) return; o.kleur = c; d.querySelectorAll('.kpick button').forEach(b => b.classList.toggle('aan', b.dataset.k === c)); };
   $('#f-ok', d).onclick = () => {
-    const doc = { naam: $('#f-naam', d).value.trim(), plaatje: $('#f-pl', d).value.trim() || '⭐', foto: o.foto || '', plekken: Math.min(12, Math.max(1, +$('#f-n', d).value || 1)), kleur: o.kleur, thema: $('#f-th', d).value, actief: $('#f-actief', d).checked };
+    const doc = { naam: $('#f-naam', d).value.trim(), plaatje: $('#f-pl', d).value.trim() || '⭐', foto: o.foto || '', plekken: +$('#f-n', d).value || 1, kleur: o.kleur, categorie: $('#f-cat', d).value, beschrijving: $('#f-bes', d).value.trim() };
     if (!doc.naam) return toast('Vul een naam in'); if (teGroot(doc)) return;
-    if (!bestaand) doc.volgorde = S.acts.length ? Math.max(...S.acts.map(a => a.volgorde || 0)) + 1 : 0;
-    DB.put(K('activiteiten/' + (bestaand?.id || nieuwId())), doc).catch(e => toast(e.message)); d.close();
+    S.cat = doc.categorie; DB.put(K('activiteiten/' + (bestaand?.id || nieuwId())), doc).catch(e => toast(e.message)); d.close();
   };
-  if (bestaand) $('#f-del', d).onclick = () => { if (confirm(`${bestaand.naam} verwijderen? Tip: je kunt een activiteit ook tijdelijk uitzetten.`)) { DB.del(K('activiteiten/' + bestaand.id)); d.close(); } };
+  if (bestaand) $('#f-del', d).onclick = () => { if (confirm(`${bestaand.naam} verwijderen? De activiteit verdwijnt ook van alle keuzeborden.`)) { DB.del(K('activiteiten/' + bestaand.id)); d.close(); } };
+}
+function catDialoog() {
+  const cs = [...cats()], bewaar = n => { S.klas.categorieen = n; return DB.put(KLAS(), { categorieen: n }); };
+  const d = dlg(`<div class="f"><h2>Categorieën</h2>${cs.map((c, i) => `<div class="rij"><input data-ci="${i}" value="${esc(c)}" maxlength="30" style="flex:1"><button class="klein rood" data-cw="${i}">✖</button></div>`).join('')}
+    <div class="rij"><input id="c-nw" placeholder="Nieuwe categorie" maxlength="30" style="flex:1"><button class="pri" id="c-add">Toevoegen</button></div><button data-sluit>Klaar</button></div>`), f = $('.f', d);
+  f.onchange = e => {
+    const i = e.target.dataset.ci; if (i == null) return; const oud = cs[i], n = e.target.value.trim();
+    if (!n || cs.includes(n)) { e.target.value = oud; return; }
+    cs[i] = n; if (S.cat === oud) S.cat = n; bewaar(cs);
+    DB.batch(S.acts.filter(a => a.categorie === oud).map(a => ({ p: K('activiteiten/' + a.id), d: { categorie: n } }))).catch(console.warn);
+  };
+  f.onclick = e => {
+    if (e.target.id === 'c-add') { const n = $('#c-nw', d).value.trim(); if (!n || cs.includes(n)) return; bewaar([...cs, n]); catDialoog(); }
+    else if (e.target.dataset.cw != null) {
+      const c = cs[e.target.dataset.cw], n = S.acts.filter(a => catVan(a) === c).length;
+      if (cs.length < 2) return toast('Er moet minstens één categorie blijven'); if (n) return toast(`Verplaats eerst de ${n} activiteiten uit deze categorie`);
+      bewaar(cs.filter(x => x !== c)); catDialoog();
+    }
+  };
+}
+
+// ---------- Keuzeborden (een selectie uit de activiteiten, bijv. per thema) ----------
+function sorteerbaar(lijst, klaar) {
+  lijst.onpointerdown = e => {
+    if (!e.target.closest('.greep')) return; e.preventDefault();
+    const rij = e.target.closest('.arij'); rij.classList.add('sleep'); sorteert = true;
+    const mv = ev => { const na = [...lijst.querySelectorAll('.arij:not(.sleep)')].find(o => { const r = o.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; }); lijst.insertBefore(rij, na || null); };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); rij.classList.remove('sleep'); sorteert = false; klaar(); };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  };
+}
+function tabKeuzeborden() {
+  const b = S.borden.find(x => x.id === S.bordEdit), pad = id => K('keuzeborden/' + id);
+  if (!b) {
+    S.bordEdit = null;
+    P.innerHTML = `<div class="blok"><div class="rij"><h2 style="flex:1">Keuzeborden</h2><button class="pri" data-nieuw>＋ Voeg keuzebord toe</button></div>
+      <p class="zacht">Een keuzebord is een selectie uit je activiteiten, bijvoorbeeld per thema. Eén keuzebord staat op het digibord.</p>
+      ${S.borden.map(x => { const aan = x.id === S.klas.keuzebordId; return `<div class="arij" data-id="${x.id}" style="--kl:${aan ? '#6fcf97' : '#ddd8e6'};flex-wrap:wrap"><span class="n">${esc(x.naam)} <span class="zacht">· ${(x.items || []).length} activiteiten${x.beschrijving ? ' · ' + esc(x.beschrijving) : ''}</span></span>${aan ? '<b>✔ Staat op het bord</b>' : '<button class="klein pri" data-start>▶ Op het bord zetten</button>'}<button class="klein" data-bew>✏️ Wijzigen</button><button class="klein" data-kopie>Kopie</button>${aan ? '' : '<button class="klein rood" data-weg>Verwijderen</button>'}</div>`; }).join('') || '<p>Nog geen keuzeborden. Zonder keuzebord staan alle activiteiten op het bord.</p>'}</div>`;
+    P.onclick = e => {
+      const t = e.target, x = S.borden.find(y => y.id === t.closest('.arij')?.dataset.id);
+      const maak = doc => { const id = nieuwId(); S.borden.push({ id, ...doc }); DB.put(pad(id), doc, false).catch(z => toast(z.message)); S.bordEdit = id; tabKeuzeborden(); };
+      if (t.dataset.nieuw != null) maak({ naam: 'Nieuw keuzebord', beschrijving: '', items: [] });
+      else if (!x) return;
+      else if (t.dataset.bew != null) { S.bordEdit = x.id; tabKeuzeborden(); }
+      else if (t.dataset.kopie != null) maak({ naam: x.naam + ' (kopie)', beschrijving: x.beschrijving || '', items: x.items || [] });
+      else if (t.dataset.start != null) { if (Object.keys(S.stand.plaatsen || {}).length) opruimen(); S.klas.keuzebordId = x.id; DB.put(KLAS(), { keuzebordId: x.id }); tabKeuzeborden(); toast(`"${x.naam}" staat nu op het bord`); }
+      else if (t.dataset.weg != null && confirm(`Keuzebord "${x.naam}" verwijderen? De activiteiten zelf blijven bestaan.`)) DB.del(pad(x.id));
+    };
+    return;
+  }
+  const items = (b.items || []).filter(it => S.acts.some(a => a.id === it.a)), op = new Set(items.map(i => i.a)), bewaar = n => { b.items = n; DB.put(pad(b.id), { items: n }).catch(z => toast(z.message)); tabKeuzeborden(); };
+  const pl = a => a.foto ? `<img src="${a.foto}" alt="">` : esc(a.plaatje);
+  P.innerHTML = `<div class="blok"><div class="rij"><button data-terug>← Alle keuzeborden</button><h2 style="flex:1">Keuzebord wijzigen</h2></div>
+      <div class="rij"><label>Naam <input data-b="naam" maxlength="40" value="${esc(b.naam)}"></label><label style="flex:1">Beschrijving <input data-b="beschrijving" maxlength="200" value="${esc(b.beschrijving || '')}" style="width:min(420px,100%)"></label></div></div>
+    <div class="tweekol"><div class="blok"><h3>Activiteiten</h3><p class="zacht">Tik op een activiteit om die op het keuzebord te zetten.</p>
+      ${cats().map(c => { const l = S.acts.filter(a => catVan(a) === c && !op.has(a.id)); return `<details ${c === S.cat ? 'open' : ''}><summary>${esc(c)} <small>(${l.length})</small></summary>${l.map(a => `<button class="klein kiesact" data-plus="${a.id}"><span class="e">${pl(a)}</span> ${esc(a.naam)}</button>`).join('')}</details>`; }).join('')}</div>
+    <div class="blok"><h3>Op het keuzebord (${items.length})</h3><p class="zacht">Sleep aan ≡ voor de volgorde. Kleur en aantal kinderen gelden alleen voor dit keuzebord.</p>
+      <div id="alijst">${items.map(it => { const a = S.acts.find(x => x.id === it.a), n = it.plekken || a.plekken; return `<div class="arij" data-a="${a.id}" style="--kl:${it.kleur || a.kleur}"><span class="greep">≡</span><span class="e">${pl(a)}</span><span class="n">${esc(a.naam)}</span><input type="color" data-kl value="${it.kleur || a.kleur || '#cbd5e0'}" title="Kleur"><select data-n title="Aantal kinderen">${Array.from({ length: 30 }, (_, i) => `<option ${i + 1 === +n ? 'selected' : ''}>${i + 1}</option>`).join('')}</select><button class="klein rood" data-min>✖</button></div>`; }).join('') || '<p class="zacht">Nog leeg.</p>'}</div></div></div>`;
+  const lijst = $('#alijst'), uitDom = () => [...lijst.querySelectorAll('.arij')].map(el => items.find(i => i.a === el.dataset.a));
+  sorteerbaar(lijst, () => bewaar(uitDom()));
+  P.onchange = e => {
+    const t = e.target, a = t.closest('.arij')?.dataset.a;
+    if (t.dataset.b) { const v = t.value.trim(); if (t.dataset.b === 'naam' && !v) return; b[t.dataset.b] = v; DB.put(pad(b.id), { [t.dataset.b]: v }); }
+    else if (a && t.dataset.kl != null) bewaar(items.map(i => i.a === a ? { ...i, kleur: t.value } : i));
+    else if (a && t.dataset.n != null) bewaar(items.map(i => i.a === a ? { ...i, plekken: +t.value } : i));
+  };
+  P.onclick = e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.terug != null) { S.bordEdit = null; tabKeuzeborden(); }
+    else if (t.dataset.plus) { S.cat = catVan(S.acts.find(a => a.id === t.dataset.plus)); bewaar([...items, { a: t.dataset.plus }]); }
+    else if (t.dataset.min != null) bewaar(items.filter(i => i.a !== t.closest('.arij').dataset.a));
+  };
 }
 
 // ---------- Moetjes ----------
@@ -788,7 +875,8 @@ async function laadOv() {
   if (S.tab === 'overzicht') renderTab();
 }
 function tabOverzicht() {
-  const o = S.ov, kids = S.kids.filter(k => k.actief !== false), acts = zichtbaar(), ks = o.keuzes, [van, tot] = periode();
+  const o = S.ov, kids = S.kids.filter(k => k.actief !== false), ks = o.keuzes, [van, tot] = periode();
+  const gebruikt = new Set([...zichtbaar().map(a => a.id), ...(ks || []).map(c => c.activiteitId)]), acts = S.acts.filter(a => gebruikt.has(a.id));
   const kop = `<div class="blok noprint"><div class="rij">
     <select data-o="periode">${[['week', 'Deze week'], ['maand', 'Deze maand'], ['jaar', 'Dit schooljaar'], ['eigen', 'Eigen periode']].map(([v, n]) => `<option value="${v}" ${o.periode === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
     ${o.periode === 'eigen' ? `<input type="date" data-o="van" value="${o.van}"> t/m <input type="date" data-o="tot" value="${o.tot}">` : ''}
@@ -840,8 +928,7 @@ function tabOverzicht() {
 // ---------- Instellingen ----------
 function tabInstellingen() {
   const k = S.klas, dk = dagkleuren(), vink = (x, aan, tekst) => `<label class="rij"><input type="checkbox" data-i="${x}" ${aan ? 'checked' : ''}> ${tekst}</label>`;
-  P.innerHTML = `<div class="blok"><h2>Klas</h2><div class="rij"><label>Naam <input data-i="naam" value="${esc(k.naam)}"></label>
-      <label>Thema <select data-i="thema"><option value="">Geen thema</option>${(k.themas || THEMAS).map(t => `<option ${t === k.thema ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label><button class="klein" data-x="thema">＋ Nieuw thema</button></div>
+  P.innerHTML = `<div class="blok"><h2>Klas</h2><div class="rij"><label>Naam <input data-i="naam" value="${esc(k.naam)}"></label></div>
       <p>${vink('geluid', k.geluid !== false, 'Geluidje bij een geslaagde keuze')}</p><p>${vink('toonTeller', k.toonTeller, 'Toon op elk kaartje hoe vaak het kind deze activiteit al koos')}</p>
       <div class="rij">Dagkleuren: ${DAGNAMEN.map((n, i) => `<label>${n} <input type="color" data-dk="${i}" value="${dk[i]}"></label>`).join('')}</div></div>
     <div class="blok"><h2>Pincode</h2><div class="rij"><input id="i-pin" inputmode="numeric" maxlength="8" placeholder="Nieuwe pincode"><button data-x="pin">Pincode wijzigen</button></div></div>
@@ -858,7 +945,6 @@ function tabInstellingen() {
   P.onclick = async e => {
     const x = e.target.dataset.x; if (!x) return;
     if (x === 'fs') volledig();
-    else if (x === 'thema') { const n = prompt('Naam van het nieuwe thema:')?.trim(); if (n) { await DB.put(KLAS(), { themas: [...new Set([...(S.klas.themas || THEMAS), n])], thema: n }); S.klas.themas = [...(S.klas.themas || THEMAS), n]; S.klas.thema = n; tabInstellingen(); } }
     else if (x === 'pin') { const p = $('#i-pin').value.trim(); if (!/^\d{4,8}$/.test(p)) return toast('Een pincode heeft 4 tot 8 cijfers'); await DB.put(KLAS(), { pinHash: await hash(S.klasId + ':' + p) }); $('#i-pin').value = ''; toast('Pincode gewijzigd'); }
     else if (x === 'export') exporteer(); else if (x === 'demo') demo();
     else if (x === 'wissel') { stopSubs(); naLogin(true); }
@@ -895,9 +981,9 @@ async function beheer() {
 
 // ---------- export, import, demo ----------
 async function exporteer() {
-  const [kinderen, activiteiten, moetjes, keuzes] = await Promise.all(['kinderen', 'activiteiten', 'moetjes', 'keuzes'].map(c => DB.list(K(c))));
+  const [kinderen, activiteiten, moetjes, keuzes, keuzeborden] = await Promise.all(['kinderen', 'activiteiten', 'moetjes', 'keuzes', 'keuzeborden'].map(c => DB.list(K(c))));
   const { pinHash, ...klas } = zonderId(S.klas);
-  const blob = new Blob([JSON.stringify({ soort: 'keuzebord-backup', versie: 1, datum: new Date().toISOString(), klas, stand: zonderId(S.stand), kinderen, activiteiten, moetjes, keuzes })], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ soort: 'keuzebord-backup', versie: 1, datum: new Date().toISOString(), klas, stand: zonderId(S.stand), kinderen, activiteiten, moetjes, keuzes, keuzeborden })], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `keuzebord-${S.klas.naam.replace(/[^\w-]+/g, '_')}-${dagStr()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 async function importeer(file) {
@@ -906,7 +992,7 @@ async function importeer(file) {
     if (d.soort !== 'keuzebord-backup') throw new Error('Dit is geen back-up van het keuzebord');
     if (!confirm(`Back-up van "${d.klas?.naam}" (${d.kinderen?.length || 0} kinderen, ${d.keuzes?.length || 0} keuzes) in deze klas zetten? Bestaande gegevens met dezelfde id worden overschreven.`)) return;
     const ops = [{ p: KLAS(), d: d.klas || {} }, { p: K('bord/stand'), d: d.stand || { plaatsen: {}, rondeId: nieuwId() }, merge: false }];
-    for (const c of ['kinderen', 'activiteiten', 'moetjes', 'keuzes']) for (const x of d[c] || []) ops.push({ p: K(c + '/' + x.id), d: zonderId(x), merge: false });
+    for (const c of ['kinderen', 'activiteiten', 'moetjes', 'keuzes', 'keuzeborden']) for (const x of d[c] || []) ops.push({ p: K(c + '/' + x.id), d: zonderId(x), merge: false });
     await DB.batch(ops); toast('Back-up teruggezet');
   } catch (e) { toast('Importeren mislukt: ' + e.message); }
 }
@@ -914,8 +1000,8 @@ async function demo() {
   if (!confirm('Demo-data laden? Er komen 24 fictieve kinderen bij, met ongeveer vier weken keuzegeschiedenis.')) return;
   toast('Demo-data wordt gemaakt…');
   const ops = [], kies1 = a => a[Math.floor(Math.random() * a.length)];
-  const acts = S.acts.length ? zichtbaar() : STANDAARD.filter(s => !s[4]).map((s, i) => ({ id: 'std' + i, plekken: s[2] }));
-  if (!S.acts.length) ops.push(...standaardOps(KLAS()));
+  const acts = S.acts.length ? zichtbaar() : STANDAARD.slice(0, 20).map((s, i) => ({ id: 'std' + i, plekken: s[2] }));
+  if (!S.acts.length) { ops.push(...standaardOps(KLAS())); if (!S.klas.keuzebordId) ops.push({ p: KLAS(), d: { keuzebordId: 'standaard' } }); }
   const kids = 'Emma Noah Sem Julia Liam Mila Lucas Tess Finn Sara Daan Zoë Levi Nora Luuk Evi Milan Lotte Bram Saar Mees Fenna Jesse Yara'.split(' ').map((naam, i) => ({ id: 'demo' + i, naam, symbool: SYMBOLEN[i], teller: {}, fav: [kies1(acts).id, kies1(acts).id, kies1(acts).id], nooit: [kies1(acts).id, kies1(acts).id] }));
   let dagenTerug = 0, gedaan = 0;
   while (gedaan < 20 && dagenTerug < 60) {
