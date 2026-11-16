@@ -623,13 +623,13 @@ addEventListener('pointercancel', e => { if (sl && e.pointerId === sl.id) terug(
 $('#bord').addEventListener('contextmenu', e => e.preventDefault());
 
 // ---------- lang indrukken ----------
-function houdIn(el, ms, fn) {
-  let t; const stop = () => { clearTimeout(t); el.classList.remove('houd'); };
-  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); el.style.setProperty('--ms', ms + 'ms'); el.classList.add('houd'); t = setTimeout(() => { stop(); fn(); }, ms); });
+function houdIn(el, ms, fn, tip) {
+  let t = null; const stop = e => { if (t && e?.type === 'pointerup') toast(tip); clearTimeout(t); t = null; el.classList.remove('houd'); };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); el.style.setProperty('--ms', ms + 'ms'); el.classList.add('houd'); t = setTimeout(() => { t = null; stop(); fn(); }, ms); });
   for (const k of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(k, stop);
 }
-houdIn($('#tandwiel'), 3000, vraagPin);
-houdIn($('#bezem'), 1500, opruimen);
+houdIn($('#tandwiel'), 3000, vraagPin, 'Houd het tandwiel 3 seconden ingedrukt voor de leerkrachtmodus');
+houdIn($('#bezem'), 1500, opruimen, 'Houd de bezem even ingedrukt om op te ruimen');
 
 // ====================================================================
 //  Leerkrachtmodus
